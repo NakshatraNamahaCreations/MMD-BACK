@@ -1,0 +1,17 @@
+# Ignore Node.js dependencies
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Ignore environment files
+.env
+
+# Ignore log files
+logs/
+*.log
+
+# Ignore VS Code settings (optional)
+.vscode/
+
+# Ignore build files (if any)
+dist/
