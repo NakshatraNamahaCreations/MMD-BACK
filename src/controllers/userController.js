@@ -66,3 +66,59 @@ catch(error){
     res.status(500).json({message:error});
 }
 }
+
+export const deleteUser = async (req, res) => {
+    try {
+        const { userId } = req.params; 
+
+       
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found!" });
+        }
+
+        await User.findByIdAndDelete(userId);
+
+        res.status(200).json({ message: "User deleted successfully!" });
+
+    } catch (error) {
+        console.error("Error deleting user:", error);
+        res.status(500).json({ message: "Error deleting user", error });
+    }
+};
+
+export const updateUserStatus = async (req, res) => {
+    try {
+        const { userId } = req.params; 
+
+        const { status } = req.body;
+
+        // // Check if user exists
+        // const user = await User.findById(id);
+        // if (!user) {
+        //     return res.status(404).json({ message: "User not found!" });
+        // }
+
+        // // Update user status
+        // user.status = status;
+        // await user.save();
+
+        // const user = await User.findById(id);
+
+        res.status(200).json({
+            message: "User status updated successfully!",
+            user: {
+                id: user._id,
+                name: user.name,
+                username: user.username,
+                email: user.email,
+                mobileNumber: user.mobileNumber,
+                status: user.status, // Ensure status is returned
+            },
+        });
+
+    } catch (error) {
+        console.error("Error updating user status:", error);
+        res.status(500).json({ message: "Error updating user status", error });
+    }
+};
