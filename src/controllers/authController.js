@@ -12,9 +12,7 @@ export const signup = async(req, res) => {
         }
         const {name, username, email, mobileNumber, role, password} = req.body;
 
-        console.log("the req body", req.body
-
-        );
+        console.log("the req body", req.body);
         
         const existingUser = await User.findOne({$or: [{email}, {username}]});
 
