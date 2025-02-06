@@ -8,6 +8,7 @@ const userSchema = new mongoose.Schema(
         mobileNumber: { type: String, required: true, unique: true },
         role: { type: String, enum: ["admin", "user"], default: "user" },
         password: { type: String, required: true },
+        status: { type: String, enum: ["active", "inactive"], default: "inactive" } 
       },
       { timestamps: true }
 );

@@ -8,6 +8,8 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import authRoutes from "./routes/authRoute.js";
 import userRoute from "./routes/userRoute.js";
+import leadRoute from "./routes/leadRoute.js";
+
 dotenv.config({path:'../.env'});
 
 const app = express();
@@ -23,9 +25,11 @@ mongoose.connect(process.env.MONGO_URI)
     console.log(err);
   });
   app.use(express.json()); 
+  app.use(express.urlencoded({ extended: true }));
 
   app.use("/api/auth", authRoutes);
   app.use("/api/user", userRoute);
+  app.use("/api/lead", leadRoute);
 
 app.get("/api", (req, res) => {
   res.send("API is running...");

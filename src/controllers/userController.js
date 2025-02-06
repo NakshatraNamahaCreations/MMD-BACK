@@ -89,36 +89,45 @@ export const deleteUser = async (req, res) => {
 
 export const updateUserStatus = async (req, res) => {
     try {
-        const { userId } = req.params; 
+        const { id, status } = req.body; 
 
-        const { status } = req.body;
+        if (!id || !status) {
+            return res.status(400).json({ message: "Missing 'id' or 'status'" });
+        }
 
-        // // Check if user exists
-        // const user = await User.findById(id);
-        // if (!user) {
-        //     return res.status(404).json({ message: "User not found!" });
-        // }
+        const user = await User.findByIdAndUpdate(id, { status }, { new: true });
 
-        // // Update user status
-        // user.status = status;
-        // await user.save();
+        if (!user) {
+            return res.status(404).json({ message: "User not found!" });
+        }
 
-        // const user = await User.findById(id);
-
-        res.status(200).json({
-            message: "User status updated successfully!",
-            user: {
-                id: user._id,
-                name: user.name,
-                username: user.username,
-                email: user.email,
-                mobileNumber: user.mobileNumber,
-                status: user.status, // Ensure status is returned
-            },
-        });
-
+        res.status(200).json({ message: "User status updated successfully!", user });
     } catch (error) {
-        console.error("Error updating user status:", error);
-        res.status(500).json({ message: "Error updating user status", error });
+        res.status(500).json({ message: "Error updating user", error });
     }
 };
+
+export const getActiveUser = async(req, res) => {
+  try{
+    const { id } = req.query;
+
+    let user;
+    if (id) {
+      // Fetch single user by ID
+      user = await User.findOne({ _id: id, status: "active", role: "user" });
+    } else {
+      // Fetch all active users
+      user = await User.find({ status: "active", role: "user" }).sort({ _id: -1 });
+    }
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    
+    res.status(200).json({message:"Fetched User Successfully", user})
+  }
+
+  catch(error){
+    res.status(500).json({message:'Error Fetching User', error});
+  }
+}

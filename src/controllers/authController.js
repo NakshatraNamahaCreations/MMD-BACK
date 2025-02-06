@@ -10,10 +10,7 @@ export const signup = async(req, res) => {
         if (!errors.isEmpty()) {
           return res.status(400).json({ errors: errors.array() });
         }
-        const {name, username, email, mobileNumber, role, password} = req.body;
-
-        console.log("the req body", req.body);
-        
+        const {name, username, email, mobileNumber, role, password} = req.body;        
         const existingUser = await User.findOne({$or: [{email}, {username}]});
 
         if(existingUser){
