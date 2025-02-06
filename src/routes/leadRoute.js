@@ -4,7 +4,6 @@ import {
   createOrUpdateFollowUp,
   deleteLead,
   getAllLeads,
-  getOverdueLead,
   updateLeadAssign,
 } from "../controllers/leadController.js";
 
@@ -14,7 +13,6 @@ router.post("/createLead", createLead);
 router.get("/getLeads/", getAllLeads);
 router.delete("/deleteLead/:leadId", deleteLead);
 router.put("/updateAssign", updateLeadAssign);
-router.put("/getOverdueLead", getOverdueLead);
 router.post("/follow-up", createOrUpdateFollowUp);
 
 export default router;

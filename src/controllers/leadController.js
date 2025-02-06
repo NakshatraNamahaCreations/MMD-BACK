@@ -2,6 +2,7 @@ import Lead from "../models/Lead.js";
 import User from "../models/User.js";
 import { validationResult } from "express-validator";
 import bcrypt from "bcryptjs";
+import { formatDate, formatTime } from "../utils/helper.js";
 import mongoose from "mongoose";
 
 export const createLead = async (req, res) => {
@@ -22,20 +23,23 @@ export const createLead = async (req, res) => {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
-    //Find last inserted order and increment order ID
-    const lastLead = await Lead.findOne({}, { orderid: 1 }).sort({
-      createdAt: -1,
-    });
+    const lastLead = await Lead.findOne({}, { orderId: 1 }) // Fetch only orderid field
+      .sort({ orderId: -1 }) // Get the latest orderid
+      .collation({ locale: "en", numericOrdering: true }); // Ensure numeric sorting works correctly
+    console.log("last leadd", lastLead);
 
-    const lastId = lastLead
-      ? parseInt(lastLead.orderid?.replace("MMD2025000", "")) + 1
-      : 1;
-    const orderid = `MMD2025000${lastId}`;
+    const lastId =
+      lastLead && lastLead.orderId
+        ? parseInt(lastLead.orderId.replace("MMD2025", ""), 10) + 1 // Extract last numeric part and increment
+        : 1;
 
+    const orderId = `MMD2025${String(lastId).padStart(3, "0")}`;
+
+    console.log(orderId, "orderId");
     //Create new lead
     const newLead = new Lead({
       ...req.body,
-      orderid,
+      orderId,
     });
 
     await newLead.save();
@@ -50,26 +54,9 @@ export const createLead = async (req, res) => {
 };
 
 export const getAllLeads = async (req, res) => {
-  const formatDate = (date) => {
-    if (!date || date === "0000-00-00") return null;
-    return new Date(date).toISOString().split("T")[0]; // YYYY-MM-DD
-  };
-
-  // Helper function to format time to 12-hour AM/PM
-  const formatTime = (time) => {
-    if (!time || time === "00:00:00") return null;
-    const date = new Date(`1970-01-01T${time}Z`);
-    return date.toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: true,
-    });
-  };
   try {
-    const { assign } = req.query; // Get 'assign' from query
+    const { assign } = req.query;
 
-    // If 'assign' is missing, return an error
     if (!assign) {
       return res.status(400).json({
         status: "error",
@@ -78,7 +65,7 @@ export const getAllLeads = async (req, res) => {
     }
 
     // Find user role
-    const user = await User.findOne({ name: assign });
+    const user = await User.findOne({ username: assign });
     console.log(user);
 
     if (!user) {
@@ -141,7 +128,7 @@ export const getAllLeads = async (req, res) => {
       villageTownCity: lead.villageTownCity || "",
       pancardstate: lead.pancardstate || "",
       pancarddistrict: lead.pancarddistrict || "",
-      orderid: lead.orderid || "",
+      orderid: lead.orderId || "",
       registrationDate: formatDate(lead.registrationDate),
       dob: formatDate(lead.dob),
       travellingDate: formatDate(lead.travellingDate),
@@ -235,108 +222,6 @@ export const updateLeadAssign = async (req, res) => {
   }
 };
 
-export const getOverdueLead = async (req, res) => {
-  try {
-    const { assign } = req.query;
-
-    if (!assign) {
-      return res
-        .status(400)
-        .json({ status: "error", message: "Missing 'assign' parameter" });
-    }
-
-    // Find user role
-    const user = await User.findOne({ name: assign });
-
-    if (!user) {
-      return res.status(404).json({
-        status: "error",
-        message: "Invalid username or no data found",
-      });
-    }
-
-    let leads;
-    let permission = "view-only";
-
-    if (user.role === "admin") {
-      console.log("Admin Access - Fetching all leads");
-      leads = await Lead.find({
-        status: "followup",
-        followupDate: { $exists: true, $ne: null, $lt: new Date() }, // Fetch leads where followupDate is before today
-      });
-      permission = "full-access";
-    } else {
-      console.log(`Fetching assigned leads for user: ${assign}`);
-      leads = await Lead.find({
-        assign: assign,
-        status: "followup",
-        followupDate: { $exists: true, $ne: null, $lt: new Date() }, // Fetch leads where followupDate is before today
-      });
-    }
-
-    if (!leads || leads.length === 0) {
-      return res.status(404).json({
-        status: "error",
-        message: "No results found for today",
-        data: [],
-      });
-    }
-
-    // Format dates before sending response
-    const formattedLeads = leads.map((lead) => ({
-      id: lead._id.toString(),
-      name: lead.name,
-      mobilenumber: lead.mobilenumber,
-      email: lead.email,
-      address: lead.address,
-      district: lead.district,
-      date: formatDate(lead.date),
-      followupDate: formatDate(lead.followupDate),
-      dob: formatDate(lead.dob),
-      registrationDate: formatDate(lead.registrationDate),
-      travellingDate: formatDate(lead.travellingDate),
-      returnDate: formatDate(lead.returnDate),
-      shiftingdate: formatDate(lead.shiftingdate),
-      dateOfIncorporation: formatDate(lead.dateOfIncorporation),
-      time: formatTime(lead.time),
-      orderid: lead.orderid,
-      status: lead.status,
-    }));
-
-    res.status(200).json({
-      status: "success",
-      message: "Data retrieved successfully",
-      permission,
-      data: formattedLeads,
-    });
-  } catch (error) {
-    console.error("Error fetching leads:", error);
-    res.status(500).json({
-      status: "error",
-      message: "Internal Server Error",
-      error: error.message,
-    });
-  }
-};
-
-// Helper function to format date (similar to PHP)
-const formatDate = (date) => {
-  if (!date) return null;
-  return new Date(date).toISOString().split("T")[0]; // YYYY-MM-DD
-};
-
-// Helper function to format time to 12-hour AM/PM
-const formatTime = (time) => {
-  if (!time) return null;
-  const date = new Date(`1970-01-01T${time}Z`);
-  return date.toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: true,
-  });
-};
-
 export const createOrUpdateFollowUp = async (req, res) => {
   try {
     const { id, status, followupDate, assign } = req.body;
@@ -349,7 +234,6 @@ export const createOrUpdateFollowUp = async (req, res) => {
     }
 
     if (id) {
-      // ✅ Update Existing Follow-Up
       let updateFields = {};
       if (status) updateFields.status = status;
       if (followupDate) updateFields.followupDate = new Date(followupDate);
@@ -371,10 +255,9 @@ export const createOrUpdateFollowUp = async (req, res) => {
         data: updatedLead,
       });
     } else {
-      // ✅ Insert New Follow-Up
       const newFollowUp = new Lead({
         status,
-        followupDate: new Date(followuptDate),
+        followupDate: new Date(followupDate),
         assign,
       });
 
