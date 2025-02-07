@@ -1,9 +1,9 @@
 import Lead from "../models/Lead.js";
 import User from "../models/User.js";
-import { validationResult } from "express-validator";
-import bcrypt from "bcryptjs";
-import mongoose from "mongoose";
-import { formatDate, formatTime } from "../utils/helper.js";
+// import { validationResult } from "express-validator";
+// import bcrypt from "bcryptjs";
+// import mongoose from "mongoose";
+// import { formatDate, formatTime } from "../utils/helper.js";
 
 export const updateLeadStatus = async (req, res) => {
   try {
@@ -107,78 +107,12 @@ export const todayFollowUp = async (req, res) => {
       });
     }
 
-    const formattedDocuments = leads.map((doc) => ({
-      id: doc._id.toString(),
-      name: doc.name,
-      date: formatDate(doc.date),
-      time: formatTime(doc.time),
-      source: doc.source,
-      service: doc.service,
-      address: doc.address,
-      email: doc.email,
-      mobilenumber: doc.mobilenumber,
-      assign: doc.assign,
-      district: doc.district,
-      pincode: doc.pincode,
-      state: doc.state,
-      paidAmount: doc.paidAmount,
-      followupDate: formatDate(doc.followupDate),
-      status: doc.status,
-      registrationNumber: doc.registrationNumber,
-      registrationDate: formatDate(doc.registrationDate),
-      applying_for: doc.applying_for,
-      gender: doc.gender,
-      age: doc.age,
-      disease: doc.disease,
-      existingpancardnumber: doc.existingpancardnumber,
-      dob: formatDate(doc.dob),
-      travellingDate: formatDate(doc.travellingDate),
-      returningDate: formatDate(doc.returningDate),
-      fathername: doc.fathername,
-      mothername: doc.mothername,
-      printOnPanCard: doc.printOnPanCard,
-      identityOption: doc.identityOption,
-      stampPaper: doc.stampPaper,
-      ownername: doc.ownername,
-      ownerAddress: doc.ownerAddress,
-      ownerDistrict: doc.ownerDistrict,
-      ownerPincode: doc.ownerPincode,
-      tenantName: doc.tenantName,
-      tenantaddress: doc.tenantaddress,
-      tenantPincode: doc.tenantPincode,
-      shiftingdate: formatDate(doc.shiftingdate),
-      shiftingaddress: doc.shiftingaddress,
-      monthlyrent: doc.monthlyrent,
-      shippingaddress: doc.shippingaddress,
-      waterCharges: doc.waterCharges,
-      paintingCharges: doc.paintingCharges,
-      accommodation: doc.accommodation,
-      appliancesFittings: doc.appliancesFittings,
-      villageTownCity: doc.villageTownCity,
-      adharnumber: doc.adharnumber,
-      businessName: doc.businessName,
-      organisationType: doc.organisationType,
-      dateOfIncorporation: formatDate(doc.dateOfIncorporation),
-      panNumber: doc.panNumber,
-      spouseName: doc.spouseName,
-      applicationType: doc.applicationType,
-      passportBookletType: doc.passportBookletType,
-      qualification: doc.qualification,
-      employmentType: doc.employmentType,
-      maritalStatus: doc.maritalStatus,
-      bloodgroup: doc.bloodgroup,
-      paymentStatus: doc.paymentStatus,
-      orderId: doc.orderId,
-      created_at: formatDate(doc.createdAt),
-      updated_by: formatDate(doc.updatedAt),
-    }));
-
     res.status(200).json({
       status: "success",
       message: "Data retrieved successfully",
       totalCount: leads.length,
       permission,
-      data: formattedLeads,
+      data: leads,
     });
   } catch (error) {
     console.error("Error fetching leads:", error);
@@ -237,79 +171,12 @@ export const getOverdueLead = async (req, res) => {
       });
     }
 
-    // Format dates before sending response
-    const formattedDocuments = leads.map((doc) => ({
-      id: doc._id.toString(),
-      name: doc.name,
-      date: formatDate(doc.date),
-      time: formatTime(doc.time),
-      source: doc.source,
-      service: doc.service,
-      address: doc.address,
-      email: doc.email,
-      mobilenumber: doc.mobilenumber,
-      assign: doc.assign,
-      district: doc.district,
-      pincode: doc.pincode,
-      state: doc.state,
-      paidAmount: doc.paidAmount,
-      followupDate: formatDate(doc.followupDate),
-      status: doc.status,
-      registrationNumber: doc.registrationNumber,
-      registrationDate: formatDate(doc.registrationDate),
-      applying_for: doc.applying_for,
-      gender: doc.gender,
-      age: doc.age,
-      disease: doc.disease,
-      existingpancardnumber: doc.existingpancardnumber,
-      dob: formatDate(doc.dob),
-      travellingDate: formatDate(doc.travellingDate),
-      returningDate: formatDate(doc.returningDate),
-      fathername: doc.fathername,
-      mothername: doc.mothername,
-      printOnPanCard: doc.printOnPanCard,
-      identityOption: doc.identityOption,
-      stampPaper: doc.stampPaper,
-      ownername: doc.ownername,
-      ownerAddress: doc.ownerAddress,
-      ownerDistrict: doc.ownerDistrict,
-      ownerPincode: doc.ownerPincode,
-      tenantName: doc.tenantName,
-      tenantaddress: doc.tenantaddress,
-      tenantPincode: doc.tenantPincode,
-      shiftingdate: formatDate(doc.shiftingdate),
-      shiftingaddress: doc.shiftingaddress,
-      monthlyrent: doc.monthlyrent,
-      shippingaddress: doc.shippingaddress,
-      waterCharges: doc.waterCharges,
-      paintingCharges: doc.paintingCharges,
-      accommodation: doc.accommodation,
-      appliancesFittings: doc.appliancesFittings,
-      villageTownCity: doc.villageTownCity,
-      adharnumber: doc.adharnumber,
-      businessName: doc.businessName,
-      organisationType: doc.organisationType,
-      dateOfIncorporation: formatDate(doc.dateOfIncorporation),
-      panNumber: doc.panNumber,
-      spouseName: doc.spouseName,
-      applicationType: doc.applicationType,
-      passportBookletType: doc.passportBookletType,
-      qualification: doc.qualification,
-      employmentType: doc.employmentType,
-      maritalStatus: doc.maritalStatus,
-      bloodgroup: doc.bloodgroup,
-      paymentStatus: doc.paymentStatus,
-      orderId: doc.orderId,
-      created_at: formatDate(doc.createdAt),
-      updated_by: formatDate(doc.updatedAt),
-    }));
-
     res.status(200).json({
       status: "success",
       message: "Data retrieved successfully",
       totalLength: leads.length,
       permission,
-      data: formattedDocuments,
+      data: leads,
     });
   } catch (error) {
     console.error("Error fetching leads:", error);
@@ -369,78 +236,77 @@ export const getFollowups = async (req, res) => {
       });
     }
 
-    const formattedDocuments = leads.map((doc) => ({
-      id: doc._id.toString(),
-      name: doc.name,
-      date: formatDate(doc.date),
-      time: formatTime(doc.time),
-      source: doc.source,
-      service: doc.service,
-      address: doc.address,
-      email: doc.email,
-      mobilenumber: doc.mobilenumber,
-      assign: doc.assign,
-      district: doc.district,
-      pincode: doc.pincode,
-      state: doc.state,
-      paidAmount: doc.paidAmount,
-      followupDate: formatDate(doc.followupDate),
-      status: doc.status,
-      registrationNumber: doc.registrationNumber,
-      registrationDate: formatDate(doc.registrationDate),
-      applying_for: doc.applying_for,
-      gender: doc.gender,
-      age: doc.age,
-      disease: doc.disease,
-      existingpancardnumber: doc.existingpancardnumber,
-      dob: formatDate(doc.dob),
-      travellingDate: formatDate(doc.travellingDate),
-      returningDate: formatDate(doc.returningDate),
-      fathername: doc.fathername,
-      mothername: doc.mothername,
-      printOnPanCard: doc.printOnPanCard,
-      identityOption: doc.identityOption,
-      stampPaper: doc.stampPaper,
-      ownername: doc.ownername,
-      ownerAddress: doc.ownerAddress,
-      ownerDistrict: doc.ownerDistrict,
-      ownerPincode: doc.ownerPincode,
-      tenantName: doc.tenantName,
-      tenantaddress: doc.tenantaddress,
-      tenantPincode: doc.tenantPincode,
-      shiftingdate: formatDate(doc.shiftingdate),
-      shiftingaddress: doc.shiftingaddress,
-      monthlyrent: doc.monthlyrent,
-      shippingaddress: doc.shippingaddress,
-      waterCharges: doc.waterCharges,
-      paintingCharges: doc.paintingCharges,
-      accommodation: doc.accommodation,
-      appliancesFittings: doc.appliancesFittings,
-      villageTownCity: doc.villageTownCity,
-      adharnumber: doc.adharnumber,
-      businessName: doc.businessName,
-      organisationType: doc.organisationType,
-      dateOfIncorporation: formatDate(doc.dateOfIncorporation),
-      panNumber: doc.panNumber,
-      spouseName: doc.spouseName,
-      applicationType: doc.applicationType,
-      passportBookletType: doc.passportBookletType,
-      qualification: doc.qualification,
-      employmentType: doc.employmentType,
-      maritalStatus: doc.maritalStatus,
-      bloodgroup: doc.bloodgroup,
-      paymentStatus: doc.paymentStatus,
-      orderId: doc.orderId,
-      created_at: formatDate(doc.createdAt),
-      updated_by: formatDate(doc.updatedAt),
-    }));
+    //   id: doc._id.toString(),
+    //   name: doc.name,
+    //   date: formatDate(doc.date),
+    //   time: formatTime(doc.time),
+    //   source: doc.source,
+    //   service: doc.service,
+    //   address: doc.address,
+    //   email: doc.email,
+    //   mobilenumber: doc.mobilenumber,
+    //   assign: doc.assign,
+    //   district: doc.district,
+    //   pincode: doc.pincode,
+    //   state: doc.state,
+    //   paidAmount: doc.paidAmount,
+    //   followupDate: formatDate(doc.followupDate),
+    //   status: doc.status,
+    //   registrationNumber: doc.registrationNumber,
+    //   registrationDate: formatDate(doc.registrationDate),
+    //   applying_for: doc.applying_for,
+    //   gender: doc.gender,
+    //   age: doc.age,
+    //   disease: doc.disease,
+    //   existingpancardnumber: doc.existingpancardnumber,
+    //   dob: formatDate(doc.dob),
+    //   travellingDate: formatDate(doc.travellingDate),
+    //   returningDate: formatDate(doc.returningDate),
+    //   fathername: doc.fathername,
+    //   mothername: doc.mothername,
+    //   printOnPanCard: doc.printOnPanCard,
+    //   identityOption: doc.identityOption,
+    //   stampPaper: doc.stampPaper,
+    //   ownername: doc.ownername,
+    //   ownerAddress: doc.ownerAddress,
+    //   ownerDistrict: doc.ownerDistrict,
+    //   ownerPincode: doc.ownerPincode,
+    //   tenantName: doc.tenantName,
+    //   tenantaddress: doc.tenantaddress,
+    //   tenantPincode: doc.tenantPincode,
+    //   shiftingdate: formatDate(doc.shiftingdate),
+    //   shiftingaddress: doc.shiftingaddress,
+    //   monthlyrent: doc.monthlyrent,
+    //   shippingaddress: doc.shippingaddress,
+    //   waterCharges: doc.waterCharges,
+    //   paintingCharges: doc.paintingCharges,
+    //   accommodation: doc.accommodation,
+    //   appliancesFittings: doc.appliancesFittings,
+    //   villageTownCity: doc.villageTownCity,
+    //   adharnumber: doc.adharnumber,
+    //   businessName: doc.businessName,
+    //   organisationType: doc.organisationType,
+    //   dateOfIncorporation: formatDate(doc.dateOfIncorporation),
+    //   panNumber: doc.panNumber,
+    //   spouseName: doc.spouseName,
+    //   applicationType: doc.applicationType,
+    //   passportBookletType: doc.passportBookletType,
+    //   qualification: doc.qualification,
+    //   employmentType: doc.employmentType,
+    //   maritalStatus: doc.maritalStatus,
+    //   bloodgroup: doc.bloodgroup,
+    //   paymentStatus: doc.paymentStatus,
+    //   orderId: doc.orderId,
+    //   created_at: formatDate(doc.createdAt),
+    //   updated_by: formatDate(doc.updatedAt),
+    // }));
 
     res.status(200).json({
       status: "success",
       message: "Data retrieved successfully",
       permission,
       totalLength: leads.length,
-      data: formattedDocuments,
+      data: leads,
     });
   } catch (error) {
     console.error("Error fetching follow-ups:", error);
@@ -473,13 +339,13 @@ export const getInprogressLead = async (req, res) => {
       });
     }
 
-    let query = { status: "In Progress" }; // Default status filter
+    let query = { status: "In Progress" };
     let permission = "view-only";
 
     if (user.role === "user") {
-      query.assign = assign; // Users can only see their assigned leads
+      query.assign = assign;
     } else if (user.role === "admin") {
-      permission = "full-access"; // Admins can see all leads
+      permission = "full-access";
     } else {
       return res.status(403).json({
         status: "error",
@@ -498,32 +364,13 @@ export const getInprogressLead = async (req, res) => {
       });
     }
 
-    // Format dates before sending response
-    const formattedDocuments = leads.map((doc) => ({
-      id: doc._id.toString(),
-      assign: doc.assign,
-      status: doc.status,
-      followupDate: formatDate(doc.followupDate),
-      created_at: formatDate(doc.created_at),
-      updated_by: formatDate(doc.updated_by),
-      date: formatDate(doc.date),
-      dob: formatDate(doc.dob),
-      registrationDate: formatDate(doc.registrationDate),
-      travellingDate: formatDate(doc.travellingDate),
-      returnDate: formatDate(doc.returnDate),
-      shiftingdate: formatDate(doc.shiftingdate),
-      dateOfIncorporation: formatDate(doc.dateOfIncorporation),
-      returningDate: formatDate(doc.returningDate),
-      time: formatTime(doc.time),
-    }));
-
     res.status(200).json({
       status: "success",
       message: "Data retrieved successfully",
       role: user.role,
       totalLength: leads.length,
       permission,
-      data: formattedDocuments,
+      data: leads,
     });
   } catch (error) {
     console.error("Error fetching documents:", error);
@@ -556,13 +403,13 @@ export const getConvertedLead = async (req, res) => {
       });
     }
 
-    let query = { status: "converted" }; // Default status filter
+    let query = { status: "converted" };
     let permission = "view-only";
 
     if (user.role === "user") {
-      query.assign = assign; // Users can only see their assigned leads
+      query.assign = assign;
     } else if (user.role === "admin") {
-      permission = "full-access"; // Admins can see all leads
+      permission = "full-access";
     } else {
       return res.status(403).json({
         status: "error",
@@ -581,80 +428,13 @@ export const getConvertedLead = async (req, res) => {
       });
     }
 
-    // Format dates before sending response
-    const formattedDocuments = leads.map((doc) => ({
-      id: doc._id.toString(),
-      name: doc.name,
-      date: formatDate(doc.date),
-      time: formatTime(doc.time),
-      source: doc.source,
-      service: doc.service,
-      address: doc.address,
-      email: doc.email,
-      mobilenumber: doc.mobilenumber,
-      assign: doc.assign,
-      district: doc.district,
-      pincode: doc.pincode,
-      state: doc.state,
-      paidAmount: doc.paidAmount,
-      followupDate: formatDate(doc.followupDate),
-      status: doc.status,
-      registrationNumber: doc.registrationNumber,
-      registrationDate: formatDate(doc.registrationDate),
-      applying_for: doc.applying_for,
-      gender: doc.gender,
-      age: doc.age,
-      disease: doc.disease,
-      existingpancardnumber: doc.existingpancardnumber,
-      dob: formatDate(doc.dob),
-      travellingDate: formatDate(doc.travellingDate),
-      returningDate: formatDate(doc.returningDate),
-      fathername: doc.fathername,
-      mothername: doc.mothername,
-      printOnPanCard: doc.printOnPanCard,
-      identityOption: doc.identityOption,
-      stampPaper: doc.stampPaper,
-      ownername: doc.ownername,
-      ownerAddress: doc.ownerAddress,
-      ownerDistrict: doc.ownerDistrict,
-      ownerPincode: doc.ownerPincode,
-      tenantName: doc.tenantName,
-      tenantaddress: doc.tenantaddress,
-      tenantPincode: doc.tenantPincode,
-      shiftingdate: formatDate(doc.shiftingdate),
-      shiftingaddress: doc.shiftingaddress,
-      monthlyrent: doc.monthlyrent,
-      shippingaddress: doc.shippingaddress,
-      waterCharges: doc.waterCharges,
-      paintingCharges: doc.paintingCharges,
-      accommodation: doc.accommodation,
-      appliancesFittings: doc.appliancesFittings,
-      villageTownCity: doc.villageTownCity,
-      adharnumber: doc.adharnumber,
-      businessName: doc.businessName,
-      organisationType: doc.organisationType,
-      dateOfIncorporation: formatDate(doc.dateOfIncorporation),
-      panNumber: doc.panNumber,
-      spouseName: doc.spouseName,
-      applicationType: doc.applicationType,
-      passportBookletType: doc.passportBookletType,
-      qualification: doc.qualification,
-      employmentType: doc.employmentType,
-      maritalStatus: doc.maritalStatus,
-      bloodgroup: doc.bloodgroup,
-      paymentStatus: doc.paymentStatus,
-      orderId: doc.orderId,
-      created_at: formatDate(doc.createdAt),
-      updated_by: formatDate(doc.updatedAt),
-    }));
-
     res.status(200).json({
       status: "success",
       message: "Data retrieved successfully",
       role: user.role,
       totalLength: leads.length,
       permission,
-      data: formattedDocuments,
+      data: leads,
     });
   } catch (error) {
     console.error("Error fetching documents:", error);
@@ -687,13 +467,13 @@ export const getDeadLead = async (req, res) => {
       });
     }
 
-    let query = { status: "dead" }; // Default status filter
+    let query = { status: "dead" };
     let permission = "view-only";
 
     if (user.role === "user") {
-      query.assign = assign; // Users can only see their assigned leads
+      query.assign = assign;
     } else if (user.role === "admin") {
-      permission = "full-access"; // Admins can see all leads
+      permission = "full-access";
     } else {
       return res.status(403).json({
         status: "error",
@@ -712,95 +492,62 @@ export const getDeadLead = async (req, res) => {
       });
     }
 
-    // Format dates before sending response
-    const formattedDocuments = leads.map((doc) => ({
-      id: doc._id?.toString() || "",
-      name: doc.name || "",
-      date: formatDate(doc.date) || "",
-      time: formatTime(doc.time) || "",
-      source: doc.source || "",
-      service: doc.service || "",
-      address: doc.address || "",
-      email: doc.email || "",
-      mobilenumber: doc.mobilenumber || "",
-      assign: doc.assign || "Select lead user",
-      district: doc.district || "N/A",
-      pincode: doc.pincode || "N/A",
-      state: doc.state || "N/A",
-      paidAmount: doc.paidAmount || "",
-      followupDate: formatDate(doc.followupDate) || "",
-      status: doc.status || "followup",
-      registrationNumber: doc.registrationNumber || "",
-      registrationDate: formatDate(doc.registrationDate) || "",
-      applying_for: doc.applying_for || "",
-      gender: doc.gender || "",
-      age: doc.age || "",
-      disease: doc.disease || "",
-      existingpancardnumber: doc.existingpancardnumber || "",
-      dob: formatDate(doc.dob) || "",
-      travellingDate: formatDate(doc.travellingDate) || "",
-      returningDate: formatDate(doc.returningDate) || "",
-      fathername: doc.fathername || "",
-      mothername: doc.mothername || "",
-      printOnPanCard: doc.printOnPanCard || "",
-      identityOption: doc.identityOption || "",
-      stampPaper: doc.stampPaper || "",
-      ownername: doc.ownername || "",
-      ownerage: doc.ownerage || "",
-      ownersfathername: doc.ownersfathername || "",
-      ownerAddress: doc.ownerAddress || "",
-      ownerDistrict: doc.ownerDistrict || "",
-      ownerPincode: doc.ownerPincode || "",
-      tenantName: doc.tenantName || "",
-      tenantage: doc.tenantage || "",
-      tenantsfathername: doc.tenantsfathername || "",
-      tenantspermanent_previousaddress:
-        doc.tenantspermanent_previousaddress || "",
-      tenantaddress: doc.tenantaddress || "",
-      tenantPincode: doc.tenantPincode || "",
-      shiftingdate: formatDate(doc.shiftingdate) || "",
-      shiftingaddress: doc.shiftingaddress || "",
-      securitydeposit: doc.securitydeposit || "",
-      monthlyrent: doc.monthlyrent || "",
-      waterCharges: doc.waterCharges || "",
-      paintingCharges: doc.paintingCharges || "",
-      accommodation: doc.accommodation || "",
-      appliancesFittings: doc.appliancesFittings || "",
-      shippingaddress: doc.shippingaddress || "",
-      selectaffidavits: doc.selectaffidavits || "",
-      passportBookletType: doc.passportBookletType || "",
-      givename: doc.givename || "",
-      surname: doc.surname || "",
-      maritalStatus: doc.maritalStatus || "",
-      placeofbirth: doc.placeofbirth || "",
-      bloodgroup: doc.bloodgroup || "",
-      gstnumber: doc.gstnumber || "",
-      businessName: doc.businessName || "",
-      typeoforganisation: doc.typeoforganisation || "",
-      organisationType: doc.organisationType || "",
-      dateOfIncorporation: formatDate(doc.dateOfIncorporation) || "",
-      pancardproprietorownerpancardnumber:
-        doc.pancardproprietorownerpancardnumber || "",
-      purposepccrequired: doc.purposepccrequired || "",
-      insurance_registration_number: doc.insurance_registration_number || "",
-      nearby_police_station: doc.nearby_police_station || "",
-      returnDate: formatDate(doc.returnDate) || "",
-      updated_by: formatDate(doc.updatedAt) || "",
-      paymentStatus: doc.paymentStatus || "Unpaid",
-      orderId: doc.orderId || "",
-      created_at: formatDate(doc.createdAt) || "",
-    }));
-
     res.status(200).json({
       status: "success",
       message: "Data retrieved successfully",
       role: user.role,
       totalLength: leads.length,
       permission,
-      data: formattedDocuments,
+      data: leads,
     });
   } catch (error) {
     console.error("Error fetching documents:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
+
+export const getStatusCounts = async (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const overdueFollowUps = await Lead.countDocuments({
+      status: "followup",
+      followupDate: { $exists: true, $ne: null, $lt: today },
+    });
+
+    const todayFollowUps = await Lead.countDocuments({
+      status: "followup",
+      followupDate: {
+        $gte: today,
+        $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000),
+      },
+    });
+
+    const inProgressLeads = await Lead.countDocuments({
+      status: "In Progress",
+    });
+
+    const convertedLeads = await Lead.countDocuments({ status: "converted" });
+    const deadLeads = await Lead.countDocuments({ status: "dead" });
+
+    res.status(200).json({
+      status: "success",
+      message: "Lead counts retrieved successfully",
+      data: {
+        overdueFollowUps,
+        todayFollowUps,
+        inProgressLeads,
+        convertedLeads,
+        deadLeads,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching lead counts:", error);
     res.status(500).json({
       status: "error",
       message: "Internal Server Error",

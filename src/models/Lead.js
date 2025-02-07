@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { formatDate, formatTime } from "../utils/helper.js";
 
 const leadSchema = new mongoose.Schema(
   {
@@ -24,7 +25,6 @@ const leadSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: ["In Progress", "converted", "dead", "followup"],
-      default: "followup",
     },
     service: { type: String, default: "" },
     followuptime: { type: Date, default: null },
@@ -95,6 +95,34 @@ const leadSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+leadSchema.methods.toJSON = function () {
+  const leadObject = this.toObject();
+
+  const dateFields = [
+    "created_at",
+    "registrationDate",
+    "returnDate",
+    "travellingDate",
+    "dateOfIncorporation",
+    "shiftingdate",
+    "updatedAt",
+    "createdAt", // Mongoose adds timestamps, so include these
+  ];
+
+  dateFields.forEach((field) => {
+    if (leadObject[field]) {
+      leadObject[field] = formatDate(leadObject[field]);
+    }
+  });
+
+  // Format time field using `formatTime`
+  if (leadObject.time) {
+    leadObject.time = formatTime(leadObject.time);
+  }
+
+  return leadObject;
+};
 
 const Lead = mongoose.model("Lead", leadSchema);
 export default Lead;

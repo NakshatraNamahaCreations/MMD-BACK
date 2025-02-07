@@ -8,7 +8,11 @@ import authRoutes from "./routes/authRoute.js";
 import userRoute from "./routes/userRoute.js";
 import leadRoute from "./routes/leadRoute.js";
 import stateRoute from "./routes/stateRoute.js";
-
+import commentRoute from "./routes/commentRoute.js";
+import otpRoute from "./routes/otpRoute.js";
+import searchRoute from "./routes/searchRoute.js";
+import messageRoute from "./routes/messageRoute.js";
+import session from "express-session";
 dotenv.config({ path: "../.env" });
 
 const app = express();
@@ -30,12 +34,26 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoute);
 app.use("/api/lead", leadRoute);
-app.use("/api", stateRoute);
+app.use("/api", stateRoute, commentRoute, otpRoute, searchRoute, messageRoute);
 
 app.get("/api", (req, res) => {
   res.send("API is running...");
 });
 
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: false },
+  })
+);
+app.get("/session", (req, res) => {
+  if (!req.session.username) {
+    return res.status(401).json({ message: "No active session" });
+  }
+  res.status(200).json({ message: "Session active", session: req.session });
+});
 app.listen(PORT, () => {
   console.log("The server is running");
   console.log(`The server is running in port: http:localhost:${PORT}
