@@ -130,7 +130,7 @@ export const getActiveUser = async (req, res) => {
 export const getProfile = async (req, res) => {
   try {
     let { id, username } = req.body;
-    const user = await User.findOne({ username: username, id: id }).select(
+    const user = await User.findOne({ username: username, _id: id }).select(
       "-password"
     );
 
