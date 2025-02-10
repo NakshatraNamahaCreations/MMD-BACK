@@ -86,7 +86,6 @@ const leadSchema = new mongoose.Schema(
     updated_by: { type: String, default: "" },
     paymentStatus: {
       type: String,
-      enum: ["Unpaid", "Paids"],
       default: "Unpaid",
     },
     source: { type: String, default: "" },
@@ -107,7 +106,7 @@ leadSchema.methods.toJSON = function () {
     "dateOfIncorporation",
     "shiftingdate",
     "updatedAt",
-    "createdAt", // Mongoose adds timestamps, so include these
+    "createdAt"
   ];
 
   dateFields.forEach((field) => {
