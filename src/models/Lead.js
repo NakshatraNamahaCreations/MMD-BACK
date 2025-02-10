@@ -86,7 +86,7 @@ const leadSchema = new mongoose.Schema(
     updated_by: { type: String, default: "" },
     paymentStatus: {
       type: String,
-      enum: ["Unpaid", "Paid"],
+      enum: ["Unpaid", "Paids"],
       default: "Unpaid",
     },
     source: { type: String, default: "" },
