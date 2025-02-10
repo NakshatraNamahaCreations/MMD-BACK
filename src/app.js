@@ -20,6 +20,7 @@ dotenv.config({ path: "../.env" });
 const app = express();
 const PORT = process.env.PORT;
 // Middleware
+// c:\Users\admin\AppData\Local\Temp\Rar$DRa14560.45622\MMD-BACK-main
 // app.use(cors());
 // app.use(bodyParser.json());
 mongoose
