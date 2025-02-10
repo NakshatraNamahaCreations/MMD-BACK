@@ -22,7 +22,7 @@ export const initiatePayment = async (req, res) => {
       ORDER_ID: orderId,
       CUST_ID: customerId,
       TXN_AMOUNT: amount,
-      CALLBACK_URL: process.env.PAYTM_CALLBACK_URL,
+      CALLBACK_URL:"http://localhost:9000/api/paytm/payment-callback",
     };
 
     paytmParams["CHECKSUMHASH"] = generatePaytmChecksum(paytmParams, process.env.PAYTM_MERCHANT_KEY);
@@ -49,7 +49,7 @@ export const initiatePayment = async (req, res) => {
 
     res.send(paymentForm);
   } catch (error) {
-    console.error("❌ Payment Error:", error);
+    console.error("Payment Error:", error);
     res.status(500).json({ success: false, message: "Payment initiation failed." });
   }
 };
@@ -61,7 +61,7 @@ export const paymentCallback = async (req, res) => {
     const paytmResponse = req.body;
 
     if (!paytmResponse || Object.keys(paytmResponse).length === 0) {
-      console.error("❌ Paytm Callback Error: Empty request body");
+      console.error("Paytm Callback Error: Empty request body");
       return res.status(400).json({ success: false, message: "Invalid callback request." });
     }
 
@@ -69,7 +69,7 @@ export const paymentCallback = async (req, res) => {
     const isValidChecksum = await verifyPaytmChecksum(paytmResponse, process.env.PAYTM_MERCHANT_KEY, receivedChecksum);
 
     if (!isValidChecksum) {
-      console.error("❌ Invalid Checksum - Possible Tampering Detected!");
+      console.error("Invalid Checksum - Possible Tampering Detected!");
       return res.status(400).json({ success: false, message: "Invalid checksum" });
     }
 
@@ -82,7 +82,7 @@ export const paymentCallback = async (req, res) => {
     console.log(`🔹 Processing Payment: orderId=${orderId}, STATUS=${STATUS}`);
 
     if (!orderId || !STATUS) {
-      console.error("❌ Missing orderId or STATUS in response.");
+      console.error("Missing orderId or STATUS in response.");
       return res.status(400).json({ success: false, message: "Invalid payment response." });
     }
 
@@ -99,7 +99,7 @@ export const paymentCallback = async (req, res) => {
     );
 
     if (!updatedPayment) {
-      console.error(`❌ Payment not found in database for orderId: ${orderId}`);
+      console.error(`Payment not found in database for orderId: ${orderId}`);
       return res.status(404).json({ success: false, message: "Payment not found." });
     }
 
@@ -111,17 +111,17 @@ export const paymentCallback = async (req, res) => {
     );
 
     if (!updatedLead) {
-      console.warn(`⚠️ No Lead found for orderId: ${orderId}`);
+      console.warn(`No Lead found for orderId: ${orderId}`);
     }
 
-    console.log(`✅ Payment Status Updated: orderId ${orderId} is ${STATUS}`);
+    console.log(`Payment Status Updated: orderId ${orderId} is ${STATUS}`);
 
     return res.status(200).json({
       success: true,
       message: `Payment status updated successfully. orderId: ${orderId}, Status: ${STATUS}`,
     });
   } catch (error) {
-    console.error("❌ Payment Callback Error:", error);
+    console.error("Payment Callback Error:", error);
     return res.status(500).json({ success: false, message: "Payment callback processing failed.", error: error.message });
   }
 };

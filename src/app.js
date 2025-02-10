@@ -14,6 +14,7 @@ import searchRoute from "./routes/searchRoute.js";
 import messageRoute from "./routes/messageRoute.js";
 import paymentRoutes from "./routes/paymentRoute.js";
 import session from "express-session";
+import Paytm from './utils/paytmConfig.js';
 dotenv.config({ path: "../.env" });
 
 const app = express();
@@ -50,12 +51,59 @@ app.use(
     cookie: { secure: false },
   })
 );
-app.get("/session", (req, res) => {
-  if (!req.session.username) {
-    return res.status(401).json({ message: "No active session" });
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+
+
+
+
+app.post('/initiateTransaction', async (req, res) => {
+  const { orderId, customerId, amount } = req.body;
+
+  if (!orderId || !customerId || !amount) {
+      return res.status(400).json({ error: "Missing required parameters" });
   }
-  res.status(200).json({ message: "Session active", session: req.session });
+
+  try {
+      const channelId = Paytm.EChannelId.WEB;
+      const txnAmount = Paytm.Money.constructWithCurrencyAndValue(Paytm.EnumCurrency.INR, amount);
+      const userInfo = new Paytm.UserInfo(customerId);
+      
+      const paymentDetailBuilder = new Paytm.PaymentDetailBuilder(channelId, orderId, txnAmount, userInfo);
+      const paymentDetail = paymentDetailBuilder.build();
+
+      const response = await Paytm.Payment.createTxnToken(paymentDetail);
+      console.log("Transaction Response:", response);
+
+      if (!response || !response.body || !response.body.txnToken) {
+          return res.status(500).json({ error: "Failed to generate transaction token" });
+      }
+
+      const txnToken = response.body.txnToken;
+      return res.json({ txnToken, orderId, mid: process.env.PAYTM_MID });
+
+  } catch (error) {
+      console.error("Error in transaction:", error);
+      return res.status(500).json({ error: error.message });
+  }
 });
+
+app.post('/callback', async (req, res) => {
+    const { ORDERID } = req.body;
+
+    const paymentStatusDetailBuilder = new Paytm.PaymentStatusDetailBuilder(ORDERID);
+    const paymentStatusDetail = paymentStatusDetailBuilder.build();
+
+    try {
+        const response = await Paytm.Payment.getPaymentStatus(paymentStatusDetail);
+        console.log("Payment Status:", response);
+        res.json(response);
+    } catch (error) {
+        console.error("Error fetching payment status:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 app.listen(PORT, () => {
   console.log("The server is running");
   console.log(`The server is running in port: http:localhost:${PORT}
