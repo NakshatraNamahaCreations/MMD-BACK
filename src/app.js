@@ -12,6 +12,7 @@ import commentRoute from "./routes/commentRoute.js";
 import otpRoute from "./routes/otpRoute.js";
 import searchRoute from "./routes/searchRoute.js";
 import messageRoute from "./routes/messageRoute.js";
+import paymentRoutes from "./routes/paymentRoute.js";
 import session from "express-session";
 dotenv.config({ path: "../.env" });
 
@@ -35,6 +36,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoute);
 app.use("/api/lead", leadRoute);
 app.use("/api", stateRoute, commentRoute, otpRoute, searchRoute, messageRoute);
+app.use("/paytm", paymentRoutes);
 
 app.get("/api", (req, res) => {
   res.send("API is running...");
