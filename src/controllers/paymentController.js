@@ -4,7 +4,6 @@ import { generatePaytmChecksum,verifyPaytmChecksum } from "../utils/helperFunc.j
 import Lead from "../models/Lead.js";
 dotenv.config({ path: "../../.env" });
 
-// ✅ Initiate Paytm Payment
 export const initiatePayment = async (req, res) => {
   try {
     const { customerId, amount } = req.body;
@@ -66,7 +65,6 @@ export const paymentCallback = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid callback request." });
     }
 
-    // ✅ Verify Checksum using Paytm’s Official Library BEFORE modifying request body
     const receivedChecksum = paytmResponse.CHECKSUMHASH;
     const isValidChecksum = await verifyPaytmChecksum(paytmResponse, process.env.PAYTM_MERCHANT_KEY, receivedChecksum);
 
@@ -75,13 +73,10 @@ export const paymentCallback = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid checksum" });
     }
 
-    // ✅ Convert Paytm's ORDERID to match MongoDB's `orderId` field
     const orderId = paytmResponse.ORDERID || paytmResponse.orderId;
 
-    // ✅ Remove Checksum AFTER Verification
     delete paytmResponse.CHECKSUMHASH;
 
-    // ✅ Extract Payment Details from Paytm Response
     const { TXNID, TXNAMOUNT, STATUS, RESPMSG, PAYMENTMODE, TXNDATE } = paytmResponse;
 
     console.log(`🔹 Processing Payment: orderId=${orderId}, STATUS=${STATUS}`);
@@ -91,13 +86,12 @@ export const paymentCallback = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid payment response." });
     }
 
-    // ✅ Update Payment Status in Payment Collection
     const updatedPayment = await Payment.findOneAndUpdate(
-      { orderId: orderId },  // ✅ Match MongoDB `orderId`
+      { orderId: orderId }, 
       {
         transactionId: TXNID,
         amount: TXNAMOUNT,
-        paymentStatus: STATUS, // ✅ Use actual Paytm status
+        paymentStatus: STATUS,
         paymentMode: PAYMENTMODE,
         transactionDate: TXNDATE,
       },
@@ -109,10 +103,10 @@ export const paymentCallback = async (req, res) => {
       return res.status(404).json({ success: false, message: "Payment not found." });
     }
 
-    // ✅ Update Lead Collection (If Payment is Related to a Lead)
+
     const updatedLead = await Lead.findOneAndUpdate(
-      { orderId: orderId }, // ✅ Match MongoDB `orderId`
-      { paymentStatus: STATUS }, // ✅ Use actual Paytm status
+      { orderId: orderId }, 
+      { paymentStatus: STATUS },
       { new: true }
     );
 
@@ -122,7 +116,6 @@ export const paymentCallback = async (req, res) => {
 
     console.log(`✅ Payment Status Updated: orderId ${orderId} is ${STATUS}`);
 
-    // ✅ Send Success Response to Paytm
     return res.status(200).json({
       success: true,
       message: `Payment status updated successfully. orderId: ${orderId}, Status: ${STATUS}`,
