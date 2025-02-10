@@ -19,9 +19,9 @@ export const generatePaytmChecksum = (params, merchantKey) => {
 
 
 // ✅ Generate Checksum using Paytm's Official Library
-export const generatePaytmChecksum = async (params, merchantKey) => {
-  return await PaytmChecksum.generateSignature(params, merchantKey);
-};
+// export const generatePaytmChecksum = async (params, merchantKey) => {
+//   return await PaytmChecksum.generateSignature(params, merchantKey);
+// };
 
 // ✅ Verify Checksum using Paytm's Official Library
 export const verifyPaytmChecksum = async (params, merchantKey, receivedChecksum) => {
