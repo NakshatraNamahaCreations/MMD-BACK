@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find().select("-password");
+    const users = await User.find({role:'user'}).select("-password");
 
     res.status(200).json({
       message: "User Fetched Successfully",
@@ -73,7 +73,7 @@ export const deleteUser = async (req, res) => {
 
     await User.findByIdAndDelete(userId);
 
-    res.status(200).json({ message: "User deleted successfully!" });
+    res.status(200).json({ message: "User deleted successfully!", status:"success" });
   } catch (error) {
     console.error("Error deleting user:", error);
     res.status(500).json({ message: "Error deleting user", error });
@@ -96,7 +96,7 @@ export const updateUserStatus = async (req, res) => {
 
     res
       .status(200)
-      .json({ message: "User status updated successfully!", user });
+      .json({status:"success", message: "User status updated successfully!", user });
   } catch (error) {
     res.status(500).json({ message: "Error updating user", error });
   }

@@ -39,7 +39,9 @@ export const signup = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { username, password } = req.body;
-
+// if(!username || !password){
+//   res.json({"message": "json error"});
+// }
     const user = await User.findOne({ username: username });
     console.log(user);
 
@@ -53,8 +55,7 @@ export const login = async (req, res) => {
         .status(400)
         .json({ message: "Invalid email/username or password" });
     }
-    req.session.username = user.username;
-    console.log("Session after login:", req.session);
+    
     // res.status(200).json({
     //     message: "Login successful!",
     //     user: {
@@ -67,6 +68,7 @@ export const login = async (req, res) => {
     //     },
     // });
     res.status(200).json({
+      success: true, 
       message: "Login Successfull",
       user: {
         id: username._id,
@@ -79,7 +81,7 @@ export const login = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Login Successfull" });
+    res.status(500).json({ message: "Login Failed" });
   }
 };
 

@@ -7,29 +7,29 @@ import mongoose from "mongoose";
 
 export const createLead = async (req, res) => {
   try {
-    // ✅ Ensure request body is received correctly
+   
     if (!req.body || Object.keys(req.body).length === 0) {
       return res
         .status(400)
         .json({ status: "error", message: "Invalid request payload" });
     }
 
-    // ✅ Extract fields properly
+    
     const leadData = req.body;
 
-    // ✅ Remove empty or undefined values
+  
     Object.keys(leadData).forEach((key) => {
       if (
         leadData[key] === "" ||
         leadData[key] === null ||
         leadData[key] === undefined
       ) {
-        delete leadData[key]; // Remove empty values before saving
+        delete leadData[key]; 
       }
     });
 
     if (leadData.id) {
-      // ✅ Update existing lead
+    
       const updatedLead = await Lead.findOneAndUpdate(
         { orderId: leadData.id },
         { $set: leadData },
@@ -49,7 +49,7 @@ export const createLead = async (req, res) => {
         });
       }
     } else {
-      // ✅ Generate new orderId
+     
       const lastLead = await Lead.findOne({}, { orderId: 1 })
         .sort({ orderId: -1 })
         .collation({ locale: "en", numericOrdering: true });
@@ -61,10 +61,10 @@ export const createLead = async (req, res) => {
 
       const orderId = `MMD2025${String(lastId).padStart(4, "0")}`;
 
-      // ✅ Create new lead
+    
       const newLead = new Lead({ ...leadData, orderId });
 
-      // ✅ Save to database
+
       await newLead.save();
 
       res.status(201).json({
@@ -93,10 +93,9 @@ export const getAllLeads = async (req, res) => {
         message: "Missing 'assign' parameter",
       });
     }
+ 
 
-    // Find user role
-    const user = await User.findOne({ username: assign });
-    console.log(user);
+    const user = await User.findOne({ name: assign });
 
     if (!user) {
       return res.status(404).json({
@@ -109,14 +108,13 @@ export const getAllLeads = async (req, res) => {
     let permission = "view-only";
 
     if (user.role === "admin") {
-      leads = await Lead.find();
-      console.log("showignt eh admin");
+      leads = await Lead.find().sort({ updated_by: -1 });
 
       permission = "full-access";
     } else {
       leads = await Lead.find({
         assign: assign,
-      });
+      }).sort({ updated_by: -1 });
     }
 
     if (!leads || leads.length === 0) {
