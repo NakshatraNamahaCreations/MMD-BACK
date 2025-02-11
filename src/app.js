@@ -18,8 +18,9 @@ import Paytm from './utils/paytmConfig.js';
 import cors from 'cors';
 import path from "path";
 import { dirname } from "path";
+import { fileURLToPath } from "url";
 
-dotenv.config({ path: path.resolve(__dirname, "../.env") })
+
 
 const app = express();
 const PORT = process.env.PORT;
@@ -28,7 +29,9 @@ const PORT = process.env.PORT;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+dotenv.config({ path: path.resolve(__dirname, "../.env") })
 // Middleware
+
 // app.use(bodyParser.json());
 app.use(cors({
   origin: "*", 
