@@ -15,6 +15,7 @@ import messageRoute from "./routes/messageRoute.js";
 import paymentRoutes from "./routes/paymentRoute.js";
 import session from "express-session";
 import Paytm from './utils/paytmConfig.js';
+import cors from 'cors';
 dotenv.config({ path: "../.env" });
 
 const app = express();
@@ -23,6 +24,15 @@ const PORT = process.env.PORT;
 // c:\Users\admin\AppData\Local\Temp\Rar$DRa14560.45622\MMD-BACK-main
 // app.use(cors());
 // app.use(bodyParser.json());
+app.use(cors({
+  origin: "*", 
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], 
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true
+}));
+
+
+app.options("*", cors());
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
