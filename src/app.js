@@ -16,13 +16,19 @@ import paymentRoutes from "./routes/paymentRoute.js";
 import session from "express-session";
 import Paytm from './utils/paytmConfig.js';
 import cors from 'cors';
-dotenv.config({ path: "../.env" });
+import path from "path";
+import { dirname } from "path";
+
+dotenv.config({ path: path.resolve(__dirname, "../.env") })
 
 const app = express();
 const PORT = process.env.PORT;
+
+// Get the __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 // Middleware
-// c:\Users\admin\AppData\Local\Temp\Rar$DRa14560.45622\MMD-BACK-main
-// app.use(cors());
 // app.use(bodyParser.json());
 app.use(cors({
   origin: "*", 
