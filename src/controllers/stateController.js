@@ -58,12 +58,12 @@ export const updateLeadStatus = async (req, res) => {
 };
 export const todayFollowUp = async (req, res) => {
   try {
-    const { assign } = req.body;
+    const { assign } = req.query;
 
     if (!assign) {
       return res
         .status(400)
-        .json({ status: "error", message: "Assign field is required" });
+        .json({ status: "error", message: "Assign query is required" });
     }
 
     // Fetch the user's role
@@ -322,7 +322,7 @@ export const getFollowups = async (req, res) => {
 
 export const getInprogressLead = async (req, res) => {
   try {
-    const { assign } = req.body;
+    const { assign } = req.query;
 
     if (!assign) {
       return res.status(400).json({
@@ -332,7 +332,7 @@ export const getInprogressLead = async (req, res) => {
     }
 
     // Fetch user details
-    const user = await User.findOne({ username: assign });
+    const user = await User.findOne({ name: assign });
 
     if (!user) {
       return res.status(404).json({
@@ -386,7 +386,7 @@ export const getInprogressLead = async (req, res) => {
 
 export const getConvertedLead = async (req, res) => {
   try {
-    const { assign } = req.body;
+    const { assign } = req.query;
 
     if (!assign) {
       return res.status(400).json({
@@ -450,7 +450,7 @@ export const getConvertedLead = async (req, res) => {
 
 export const getDeadLead = async (req, res) => {
   try {
-    const { assign } = req.body;
+    const { assign } = req.query;
 
     if (!assign) {
       return res.status(400).json({
@@ -460,7 +460,7 @@ export const getDeadLead = async (req, res) => {
     }
 
     // Fetch user details
-    const user = await User.findOne({ username: assign });
+    const user = await User.findOne({ name: assign });
 
     if (!user) {
       return res.status(404).json({
