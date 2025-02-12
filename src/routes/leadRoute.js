@@ -11,7 +11,7 @@ import {
 const router = express.Router();
 
 router.post("/createLead", createLead);
-router.get("/getLeads/", getAllLeads);
+router.get("/getLeads", getAllLeads);
 router.delete("/deleteLead/:leadId", deleteLead);
 router.put("/updateAssign", updateLeadAssign);
 router.post("/follow-up", createOrUpdateFollowUp);

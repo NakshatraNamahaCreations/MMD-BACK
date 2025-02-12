@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs";
 // import { formatDate, formatTime } from "../utils/helper.js";
 import mongoose from "mongoose";
 
-export const createLead = async (req, res) => {
+export const  createLead = async (req, res) => {
   try {
    
     if (!req.body || Object.keys(req.body).length === 0) {
@@ -94,7 +94,6 @@ export const getAllLeads = async (req, res) => {
       });
     }
  
-
     const user = await User.findOne({ name: assign });
 
     if (!user) {

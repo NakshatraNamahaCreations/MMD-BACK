@@ -18,7 +18,7 @@ export const updateLeadStatus = async (req, res) => {
     }
 
     // Check if the status is valid
-    const validStatuses = ["In Progress", "converted", "dead", "followup"];
+    const validStatuses = ["In Progress", "converted", "dead", "followup", "overdue"];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({
         status: "error",
@@ -135,7 +135,7 @@ export const getOverdueLead = async (req, res) => {
     }
 
     // Find user role
-    const user = await User.findOne({ username: assign });
+    const user = await User.findOne({ name: assign });
 
     if (!user) {
       return res.status(404).json({
@@ -148,16 +148,18 @@ export const getOverdueLead = async (req, res) => {
     let permission = "view-only";
 
     if (user.role === "admin") {
-      console.log("Admin Access - Fetching all leads");
       leads = await Lead.find({
         status: "followup",
         followupDate: { $exists: true, $ne: null, $lt: new Date() },
       });
       permission = "full-access";
     } else {
-      console.log(`Fetching assigned leads for user: ${assign}`);
       leads = await Lead.find({
-        assign: assign,
+        $or: [
+          { assign: assign }, // Leads assigned to the user
+          { assign: "Unassigned" },   // Unassigned leads
+          { assign: null },     // Empty string assignments
+        ],
         status: "followup",
         followupDate: { $exists: true, $ne: null, $lt: new Date() },
       });
@@ -166,7 +168,7 @@ export const getOverdueLead = async (req, res) => {
     if (!leads || leads.length === 0) {
       return res.status(404).json({
         status: "error",
-        message: "No results found for today",
+        message: "No results found for overdue",
         data: [],
       });
     }
@@ -394,7 +396,7 @@ export const getConvertedLead = async (req, res) => {
     }
 
     // Fetch user details
-    const user = await User.findOne({ username: assign });
+    const user = await User.findOne({ name: assign });
 
     if (!user) {
       return res.status(404).json({
