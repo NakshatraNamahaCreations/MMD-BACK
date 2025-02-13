@@ -2,7 +2,7 @@ import express from "express";
 import {
   forgotPassword,
   login,
-  resetPassword,
+  // resetPassword,
   signup,
   verifyOtp,
 } from "../controllers/authController.js";
@@ -19,6 +19,6 @@ router.post("/forgot-password", forgotPassword);
 router.post("/verify-otp", verifyOtp);
 
 // Reset password
-router.post("/reset-password", resetPassword);
+// router.post("/reset-password", resetPassword);
 
 export default router;

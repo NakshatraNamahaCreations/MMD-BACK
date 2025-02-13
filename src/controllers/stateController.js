@@ -1,8 +1,7 @@
 import Lead from "../models/Lead.js";
 import User from "../models/User.js";
 // import { validationResult } from "express-validator";
-// import bcrypt from "bcryptjs";
-// import mongoose from "mongoose";
+
 // import { formatDate, formatTime } from "../utils/helper.js";
 
 export const updateLeadStatus = async (req, res) => {
@@ -536,6 +535,7 @@ export const getStatusCounts = async (req, res) => {
 
     const convertedLeads = await Lead.countDocuments({ status: "converted" });
     const deadLeads = await Lead.countDocuments({ status: "dead" });
+    const followups = await Lead.countDocuments({ status: "followup" });
 
     res.status(200).json({
       status: "success",
@@ -546,6 +546,7 @@ export const getStatusCounts = async (req, res) => {
         inProgressLeads,
         convertedLeads,
         deadLeads,
+        followups
       },
     });
   } catch (error) {

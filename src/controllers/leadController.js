@@ -1,7 +1,6 @@
 import Lead from "../models/Lead.js";
 import User from "../models/User.js";
 import { validationResult } from "express-validator";
-import bcrypt from "bcryptjs";
 // import { formatDate, formatTime } from "../utils/helper.js";
 import mongoose from "mongoose";
 

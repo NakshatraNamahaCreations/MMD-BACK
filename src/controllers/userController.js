@@ -1,6 +1,6 @@
 import User from "../models/User.js";
 import { validationResult } from "express-validator";
-import bcrypt from "bcryptjs";
+// import bcrypt from "bcryptjs";
 import multer from "multer";
 import path from "path";
 import fs from "fs-extra";
@@ -64,8 +64,7 @@ export const editUser = async (req, res) => {
 
       // Hash new password if provided
       if (password) {
-        const hashedPassword = await bcrypt.hash(password, 10);
-        user.password = hashedPassword;
+        user.password = password; 
       }
 
       // Handle Profile Picture Upload
@@ -86,7 +85,7 @@ export const editUser = async (req, res) => {
           email: user.email,
           mobileNumber: user.mobileNumber,
           role: user.role,
-          profile_picture: user.profile_picture, // Updated profile picture URL
+          profile_picture: user.profile_picture,
         },
       });
     } catch (error) {
@@ -164,9 +163,7 @@ export const getActiveUser = async (req, res) => {
 export const getProfile = async (req, res) => {
   try {
     let { id, username } = req.body;
-    const user = await User.findOne({ username: username, _id: id }).select(
-      "-password"
-    );
+    const user = await User.findOne({ username: username, _id: id });
 
     if (!user) {
       return res
