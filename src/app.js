@@ -43,13 +43,14 @@ mongoose
   });
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use("/uploads", express.static("uploads"));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoute);
 app.use("/api/lead", leadRoute);
 app.use("/api", stateRoute, commentRoute, otpRoute, searchRoute, messageRoute);
 app.use("/api/paytm", paymentRoutes);
-
+  
 app.get("/api", (req, res) => {
   res.send("API is running...");
 });

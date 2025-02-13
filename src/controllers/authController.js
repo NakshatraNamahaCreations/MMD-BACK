@@ -71,13 +71,14 @@ export const login = async (req, res) => {
       success: true, 
       message: "Login Successfull",
       user: {
-        id: username._id,
+        id: user._id,
         name: user.name,
         username: user.username,
         email: user.email,
         mobileNumber: user.mobileNumber,
         role: user.role,
-      },
+        profile_picture: user.profile_picture, 
+            },
     });
   } catch (error) {
     console.error(error);

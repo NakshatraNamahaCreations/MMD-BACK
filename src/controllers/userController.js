@@ -1,6 +1,24 @@
 import User from "../models/User.js";
 import { validationResult } from "express-validator";
 import bcrypt from "bcryptjs";
+import multer from "multer";
+import path from "path";
+import fs from "fs-extra";
+
+// Ensure the upload directory exists
+const uploadDir = path.join(process.cwd(), "uploads/profile_pictures");
+fs.ensureDirSync(uploadDir);
+
+// Multer Storage Configuration
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  },
+});
+const upload = multer({ storage }).single("profile_picture");
 
 export const getAllUsers = async (req, res) => {
   try {
@@ -17,49 +35,65 @@ export const getAllUsers = async (req, res) => {
   }
 };
 
+
 export const editUser = async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-    const { userId } = req.params;
-    const { name, username, email, mobileNumber, role, password } = req.body;
-
-    let user = await User.findById(userId).exec();
-
-    if (!user) {
-      return res.status(404).json({ message: "User Not Found" });
+  upload(req, res, async function (err) {
+    if (err) {
+      return res.status(500).json({ message: "File upload error", error: err });
     }
 
-    if (name) user.name = name;
-    if (username) user.username = username;
-    if (email) user.email = email;
-    if (mobileNumber) user.mobileNumber = mobileNumber;
-    if (role) user.role = role;
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
 
-    if (password) {
-      const hashedPassword = await bcrypt.hash(password, 10);
-      user.password = hashedPassword;
+      const { userId } = req.params;
+      const { name, username, email, mobileNumber, role, password } = req.body;
+
+      let user = await User.findById(userId).exec();
+      if (!user) {
+        return res.status(404).json({ message: "User Not Found" });
+      }
+
+      if (name) user.name = name;
+      if (username) user.username = username;
+      if (email) user.email = email;
+      if (mobileNumber) user.mobileNumber = mobileNumber;
+      if (role) user.role = role;
+
+      // Hash new password if provided
+      if (password) {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        user.password = hashedPassword;
+      }
+
+      // Handle Profile Picture Upload
+      if (req.file) {
+        const baseUrl = "http://localhost:9000/uploads/profile_pictures/";
+        user.profile_picture = baseUrl + req.file.filename;
+      }
+
+      await user.save();
+
+      res.status(200).json({
+        status: "success",
+        message: "User Detail Updated Successfully",
+        user: {
+          id: user._id,
+          name: user.name,
+          username: user.username,
+          email: user.email,
+          mobileNumber: user.mobileNumber,
+          role: user.role,
+          profile_picture: user.profile_picture, // Updated profile picture URL
+        },
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Error updating user", error });
     }
-
-    await user.save();
-
-    res.status(200).json({
-      message: "User Detail Updated Successfully",
-      user: {
-        id: user._id,
-        name: user.name,
-        username: user.username,
-        email: user.email,
-        mobileNumber: user.mobileNumber,
-        role: user.role,
-      },
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: error });
-  }
+  });
 };
 
 export const deleteUser = async (req, res) => {
