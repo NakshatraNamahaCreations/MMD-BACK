@@ -192,7 +192,7 @@ export const getOverdueLead = async (req, res) => {
 
 export const getFollowups = async (req, res) => {
   try {
-    let { assign } = req.body;
+    let { assign } = req.query;
 
     if (!assign) {
       return res.status(400).json({
@@ -202,7 +202,7 @@ export const getFollowups = async (req, res) => {
     }
 
     // Fetch the user role
-    const user = await User.findOne({ username: assign });
+    const user = await User.findOne({  name: assign });
 
     if (!user) {
       return res.status(404).json({
@@ -211,13 +211,13 @@ export const getFollowups = async (req, res) => {
       });
     }
 
-    // Get today's date at midnight (00:00:00) to compare correctly
-    let today = new Date();
-    today.setHours(0, 0, 0, 0);
+    let tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
 
     let query = {
       status: "followup",
-      followupDate: { $gt: today }, // Fetch only future follow-ups
+      followupDate: { $gt: tomorrow }, 
     };
 
     let permission = "view-only";
