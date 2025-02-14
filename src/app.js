@@ -35,7 +35,7 @@ const PAYTM_TXN_URL = "https://securegw-stage.paytm.in/order/process";
 // app.use(cors());
 // app.use(bodyParser.json());
 app.use(cors({
-  origin: ["https://leads.makemydocuments.in","http://localhost:3000"], 
+  origin:  ["https://leads.makemydocuments.in","http://localhost:3000"],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], 
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true 

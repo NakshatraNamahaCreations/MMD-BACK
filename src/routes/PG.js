@@ -14,7 +14,7 @@ const paytmConfig = {
     WEBSITE: "DEFAULT",
     INDUSTRY_TYPE_ID: "Retail",
     CHANNEL_ID: "WEB",
-    CALLBACK_URL: "http://localhost:9000/api/PG/paytm/callback",
+    CALLBACK_URL: "https://api.makemydocuments.in/api/PG/paytm/callback",
 };
 
 router.post("/paytm/initiate", async (req, res) => {
@@ -25,25 +25,17 @@ router.post("/paytm/initiate", async (req, res) => {
 
         const leadData = req.body;
         
-        // Removing empty keys
-        Object.keys(leadData).forEach((key) => {
-            if (leadData[key] === "" || leadData[key] === null || leadData[key] === undefined) {
-                delete leadData[key]; 
-            }
-        });
+     
+            Object.keys(leadData).forEach((key) => {
+                if (leadData[key] === "" || leadData[key] === null || leadData[key] === undefined) {
+                    delete leadData[key]; 
+                }
+            });
 
         let ORDER_ID;
 
-        if (leadData.id) {
-            // ✅ Update existing lead
-            const updatedLead = await Lead.findOneAndUpdate(
-                { orderId: leadData.id },
-                { $set: leadData },
-                { new: true }
-            );
-            ORDER_ID = leadData.id;
-        } else {
-            // ✅ Generate new ORDER_ID
+     
+        //     // ✅ Generate new ORDER_ID
             const lastLead = await Lead.findOne({}, { orderId: 1 })
                 .sort({ orderId: -1 })
                 .collation({ locale: "en", numericOrdering: true });
@@ -56,9 +48,9 @@ router.post("/paytm/initiate", async (req, res) => {
             
             const newLead = new Lead({ ...leadData, orderId: ORDER_ID });
             await newLead.save();
-        }
+        
 
-        // const ORDER_ID="mmmas23"
+        // const ORDER_ID="mmmas233"
         // ✅ Extracting Parameters
         const { CUST_ID, TXN_AMOUNT, SERVICE } = req.body;
 
