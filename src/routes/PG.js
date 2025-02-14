@@ -14,7 +14,7 @@ const paytmConfig = {
     WEBSITE: "DEFAULT",
     INDUSTRY_TYPE_ID: "Retail",
     CHANNEL_ID: "WEB",
-    CALLBACK_URL: "https://api.makemydocuments.in/api/PG/paytm/callback",
+    CALLBACK_URL: "http://localhost:9000/api/PG/paytm/callback",
 };
 
 router.post("/paytm/initiate", async (req, res) => {
@@ -58,6 +58,7 @@ router.post("/paytm/initiate", async (req, res) => {
             await newLead.save();
         }
 
+        // const ORDER_ID="mmmas23"
         // ✅ Extracting Parameters
         const { CUST_ID, TXN_AMOUNT, SERVICE } = req.body;
 
