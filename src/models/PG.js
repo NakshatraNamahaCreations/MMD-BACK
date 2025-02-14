@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const PaymentSchema = new mongoose.Schema({
+const PGchema = new mongoose.Schema({
   orderId: { type: String, required: true, unique: true },
   custId: { type: String, required: true },
   industryTypeId: { type: String, required: true },
@@ -12,5 +12,5 @@ const PaymentSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-const Payments=  mongoose.model("Payment", PaymentSchema);
-export default Payments;
+const PGModel=  mongoose.model("PG", PGchema);
+export default PGModel;
