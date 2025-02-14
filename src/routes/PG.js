@@ -67,7 +67,7 @@ router.post("/paytm/initiate", async (req, res) => {
             CHANNEL_ID: paytmConfig.CHANNEL_ID,
             TXN_AMOUNT: TXN_AMOUNT,
             WEBSITE: paytmConfig.WEBSITE,
-            CALLBACK_URL: `${paytmConfig.CALLBACK_URL}?orderid=${ORDER_ID}`,
+            CALLBACK_URL: `${paytmConfig.CALLBACK_URL}?orderid=${ORDER_ID}&service=${SERVICE}`,
         };
 
         // ✅ Generate Checksum using Paytm Utility
@@ -92,7 +92,7 @@ router.post("/paytm/callback", async (req, res) => {
         }
 
         const { CHECKSUMHASH, ...paramList } = req.body; // Extract checksum and parameters
-        const {  orderid } = req.query; // Extract service & orderId from URL
+        const {  service,orderid } = req.query; // Extract service & orderId from URL
 
         if (!CHECKSUMHASH) {
             console.error("Missing CHECKSUMHASH in response.");
