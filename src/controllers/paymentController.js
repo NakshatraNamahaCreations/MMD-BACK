@@ -1,9 +1,14 @@
 import Payment from "../models/Payment.js";
-import dotenv from 'dotenv';
-import { generatePaytmChecksum,verifyPaytmChecksum } from "../utils/helperFunc.js";
 import Lead from "../models/Lead.js";
+import dotenv from "dotenv";
+import PaytmChecksum from "paytmchecksum";
+import { config } from "../config/paytmConfig.js";
+
 dotenv.config({ path: "../../.env" });
 
+/**
+ * 🚀 Initiate Payment Transaction
+ */
 export const initiatePayment = async (req, res) => {
   try {
     const { customerId, amount } = req.body;
@@ -18,76 +23,80 @@ export const initiatePayment = async (req, res) => {
       MID: process.env.PAYTM_MID,
       WEBSITE: process.env.PAYTM_WEBSITE,
       INDUSTRY_TYPE_ID: process.env.PAYTM_INDUSTRY_TYPE,
-      CHANNEL_ID: process.env.PAYTM_CHANNEL_ID,
+      CHANNEL_ID: process.env.PAYTM_CHANNEL_ID, 
       ORDER_ID: orderId,
       CUST_ID: customerId,
-      TXN_AMOUNT: amount,
-      CALLBACK_URL:"http://localhost:9000/api/paytm/payment-callback",
+      TXN_AMOUNT: amount.toString(),
+      CALLBACK_URL: process.env.PAYTM_CALLBACK_URL || "http://localhost:9000/api/payment/callback",
     };
 
-    paytmParams["CHECKSUMHASH"] = generatePaytmChecksum(paytmParams, process.env.PAYTM_MERCHANT_KEY);
 
- 
-    await new Payment({ orderId, customerId, amount }).save();
+    paytmParams["CHECKSUMHASH"] = await PaytmChecksum.generateSignature(paytmParams, process.env.PAYTM_MERCHANT_KEY);
 
-  
-    const paymentForm = `
-      <html>
-      <head>
-          <title>Redirecting to Paytm...</title>
-      </head>
-      <body onload="document.paytmForm.submit();">
-          <h2>Redirecting to Paytm Payment Gateway...</h2>
-          <form method="POST" action="${process.env.PAYTM_TRANSACTION_URL}" name="paytmForm">
-              ${Object.entries(paytmParams)
-                .map(([key, value]) => `<input type="hidden" name="${key}" value="${value}">`)
-                .join("\n")}
-          </form>
-      </body>
-      </html>
-    `;
 
-    res.send(paymentForm);
+    await new Payment({ orderId, customerId, amount, paymentStatus: "PENDING" }).save();
+
+    res.json({
+      success: true,
+      message: "Transaction initiated",
+      paytmParams,
+      paytmUrl: "https://securegw-stage.paytm.in/order/process",
+    });
   } catch (error) {
-    console.error("Payment Error:", error);
+    console.error("Payment Initiation Error:", error);
     res.status(500).json({ success: false, message: "Payment initiation failed." });
   }
 };
+
 
 export const paymentCallback = async (req, res) => {
   try {
     console.log("🔹 Paytm Callback Received:", req.body);
 
     const paytmResponse = req.body;
+    console.log("🔹 Full Response:", JSON.stringify(paytmResponse, null, 2));
 
+    // Ensure the response contains data and checksum
     if (!paytmResponse || Object.keys(paytmResponse).length === 0) {
-      console.error("Paytm Callback Error: Empty request body");
       return res.status(400).json({ success: false, message: "Invalid callback request." });
     }
 
-    const receivedChecksum = paytmResponse.CHECKSUMHASH;
-    const isValidChecksum = await verifyPaytmChecksum(paytmResponse, process.env.PAYTM_MERCHANT_KEY, receivedChecksum);
+    // Ensure checksum exists
+    if (!paytmResponse.CHECKSUMHASH) {
+      return res.status(400).json({ success: false, message: "Missing CHECKSUMHASH in callback response." });
+    }
+
+    console.log("✅ CHECKSUMHASH Found:", paytmResponse.CHECKSUMHASH);
+
+    // Remove CHECKSUMHASH before checksum verification
+    const { CHECKSUMHASH, ...paytmResponseWithoutChecksum } = paytmResponse;
+
+    // Verify the checksum
+    const receivedChecksum = CHECKSUMHASH;
+    const isValidChecksum = PaytmChecksum.verifySignature(
+      paytmResponseWithoutChecksum, 
+      config.PAYTM_MERCHANT_KEY, 
+      receivedChecksum
+    );
+
+    console.log("✅ Valid Checksum:", isValidChecksum);
 
     if (!isValidChecksum) {
-      console.error("Invalid Checksum - Possible Tampering Detected!");
+      console.error("❌ Invalid Checksum - Possible Tampering Detected!");
       return res.status(400).json({ success: false, message: "Invalid checksum" });
     }
 
-    const orderId = paytmResponse.ORDERID || paytmResponse.orderId;
+    console.log("✅ Checksum Verified! Processing Transaction...");
 
-    delete paytmResponse.CHECKSUMHASH;
+    const { ORDERID, TXNID, TXNAMOUNT, STATUS, RESPMSG, PAYMENTMODE, TXNDATE } = paytmResponse;
 
-    const { TXNID, TXNAMOUNT, STATUS, RESPMSG, PAYMENTMODE, TXNDATE } = paytmResponse;
-
-    console.log(`🔹 Processing Payment: orderId=${orderId}, STATUS=${STATUS}`);
-
-    if (!orderId || !STATUS) {
-      console.error("Missing orderId or STATUS in response.");
+    if (!ORDERID || !STATUS) {
       return res.status(400).json({ success: false, message: "Invalid payment response." });
     }
 
+    // Update Payment Record
     const updatedPayment = await Payment.findOneAndUpdate(
-      { orderId: orderId }, 
+      { orderId: ORDERID },
       {
         transactionId: TXNID,
         amount: TXNAMOUNT,
@@ -99,29 +108,30 @@ export const paymentCallback = async (req, res) => {
     );
 
     if (!updatedPayment) {
-      console.error(`Payment not found in database for orderId: ${orderId}`);
+      console.error(`Payment not found in database for orderId: ${ORDERID}`);
       return res.status(404).json({ success: false, message: "Payment not found." });
     }
 
-
+    // Optionally update Lead record
     const updatedLead = await Lead.findOneAndUpdate(
-      { orderId: orderId }, 
+      { orderId: ORDERID },
       { paymentStatus: STATUS },
       { new: true }
     );
 
     if (!updatedLead) {
-      console.warn(`No Lead found for orderId: ${orderId}`);
+      console.warn(`No Lead found for orderId: ${ORDERID}`);
     }
 
-    console.log(`Payment Status Updated: orderId ${orderId} is ${STATUS}`);
+    console.log(`✅ Payment Status Updated: orderId ${ORDERID} is ${STATUS}`);
 
     return res.status(200).json({
       success: true,
-      message: `Payment status updated successfully. orderId: ${orderId}, Status: ${STATUS}`,
+      message: `Payment status updated successfully. orderId: ${ORDERID}, Status: ${STATUS}`,
     });
   } catch (error) {
     console.error("Payment Callback Error:", error);
     return res.status(500).json({ success: false, message: "Payment callback processing failed.", error: error.message });
   }
 };
+
