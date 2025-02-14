@@ -22,7 +22,7 @@ const upload = multer({ storage }).single("profile_picture");
 
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find({role:'user'}).select("-password");
+    const users = await User.find({role:'user'});
 
     res.status(200).json({
       message: "User Fetched Successfully",
@@ -62,7 +62,6 @@ export const editUser = async (req, res) => {
       if (mobileNumber) user.mobileNumber = mobileNumber;
       if (role) user.role = role;
 
-      // Hash new password if provided
       if (password) {
         user.password = password; 
       }

@@ -71,6 +71,7 @@ export const login = async (req, res) => {
         mobileNumber: user.mobileNumber,
         role: user.role,
         profile_picture: user.profile_picture,
+        password:user.password
       },
     });
 

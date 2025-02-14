@@ -19,13 +19,15 @@ import axios from 'axios';
 
 import Paytm from './utils/paytmConfig.js';
 import cors from 'cors';
+import PaytmChecksum from "paytmchecksum";
+import bodyParser from "body-parser";
 dotenv.config({ path: "../.env" });
 
 const app = express();
 const PORT = process.env.PORT;
 const PAYTM_MERCHANT_KEY = process.env.PAYTM_MERCHANT_KEY;
-const PAYTM_MERCHANT_MID = process.env.PAYTM_MERCHANT_MID;
-const PAYTM_MERCHANT_WEBSITE = process.env.PAYTM_MERCHANT_WEBSITE;
+const PAYTM_MERCHANT_MID = process.env.PAYTM_MID;
+const PAYTM_WEBSITE = process.env.PAYTM_WEBSITE;
 const PAYTM_TXN_URL = "https://securegw-stage.paytm.in/order/process"; 
 // Middleware
 // c:\Users\admin\AppData\Local\Temp\Rar$DRa14560.45622\MMD-BACK-main
@@ -51,6 +53,8 @@ mongoose
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static("uploads"));
+app.use(bodyParser.urlencoded({ extended: true })); // ✅ Required to parse Paytm callback
+app.use(bodyParser.json()); // ✅ Required for JSON handling
 
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoute);
@@ -72,67 +76,14 @@ app.use(
 );
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+app.use(bodyParser.json());
 
 
 
 
-// app.post('/initiateTransaction', async (req, res) => {
-//   const { orderId, customerId, amount } = req.body;
+ 
 
-//   if (!orderId || !customerId || !amount) {
-//       return res.status(400).json({ error: "Missing required parameters" });
-//   }
-
-//   try {
-//       const channelId = Paytm.EChannelId.WEB;
-//       const txnAmount = Paytm.Money.constructWithCurrencyAndValue(Paytm.EnumCurrency.INR, amount);
-//       const userInfo = new Paytm.UserInfo(customerId);
-      
-//       const paymentDetailBuilder = new Paytm.PaymentDetailBuilder(channelId, orderId, txnAmount, userInfo);
-//       const paymentDetail = paymentDetailBuilder.build();
-
-//       const response = await Paytm.Payment.createTxnToken(paymentDetail);
-//       console.log("Transaction Response:", response);
-
-//       if (!response || !response.body || !response.body.txnToken) {
-//           return res.status(500).json({ error: "Failed to generate transaction token" });
-//       }
-
-//       const txnToken = response.body.txnToken;
-//       return res.json({ txnToken, orderId, mid: process.env.PAYTM_MID });
-
-//   } catch (error) {
-//       console.error("Error in transaction:", error);
-//       return res.status(500).json({ error: error.message });
-//   }
-// });
-
-// app.post('/callback', async (req, res) => {
-//     const { ORDERID } = req.body;
-
-//     const paymentStatusDetailBuilder = new Paytm.PaymentStatusDetailBuilder(ORDERID);
-//     const paymentStatusDetail = paymentStatusDetailBuilder.build();
-
-//     try {
-//         const response = await Paytm.Payment.getPaymentStatus(paymentStatusDetail);
-//         console.log("Payment Status:", response);
-//         res.json(response);
-//     } catch (error) {
-//         console.error("Error fetching payment status:", error);
-//         res.status(500).json({ error: error.message });
-//     }
-// });
-const generateChecksum = (params, merchantKey) => {
-  const paramsStr = Object.keys(params)
-    .sort()
-    .map(key => `${key}=${params[key]}`)
-    .join("&");
-
-  const hash = crypto.createHmac('sha256', merchantKey).update(paramsStr).digest('hex');
-  return hash;
-};
-
-app.post('/initiatePayment', async (req, res) => {
+app.post("/initiatePayment", async (req, res) => {
   try {
     const { customerId, amount, orderId, industryTypeId, channelId, service } = req.body;
 
@@ -140,38 +91,40 @@ app.post('/initiatePayment', async (req, res) => {
       return res.status(400).json({ message: "All fields are required." });
     }
 
-    const paramList = {
+    let paytmParams = {
       MID: PAYTM_MERCHANT_MID,
       ORDER_ID: orderId,
       CUST_ID: customerId,
       INDUSTRY_TYPE_ID: industryTypeId,
       CHANNEL_ID: channelId,
-      TXN_AMOUNT: amount,
-      WEBSITE: PAYTM_MERCHANT_WEBSITE,
-      CALLBACK_URL: `http://localhost:9000/api/paytm/payment-callback?orderid=${orderId}&service=${service}`,
+      TXN_AMOUNT: amount.toString(),
+      WEBSITE: PAYTM_WEBSITE,
+      CALLBACK_URL: `http://localhost:9000/payment-callback`,
+      CURRENCY: "INR",
     };
 
-    // Generate checksum
-    const paytmChecksum = await PaytmChecksum.generateSignature(paytmParams, "Wi%SmC%mkRR%jP8M");
-    paramList.CHECKSUMHASH = checksum;
+    const checksum = await PaytmChecksum.generateSignature(
+      paytmParams,
+      PAYTM_MERCHANT_KEY
+    );
 
-    // Submit form data to Paytm
+    paytmParams["CHECKSUMHASH"] = checksum;
+
+    console.log("🔹 Generated Checksum:", checksum);
+    console.log("🔹 Final Paytm Params Before Sending to Paytm:", paytmParams);
+
     const formHtml = `
       <html>
-        <head>
-          <title>Merchant Check Out Page</title>
-        </head>
+        <head><title>Redirecting...</title></head>
         <body>
           <center><h1>Please do not refresh this page...</h1></center>
-          <form method="post" action="${PAYTM_TXN_URL}" name="paytmForm">
-            <table border="1">
-              <tbody>
-                ${Object.keys(paramList).map(key => {
-                  return `<input type="hidden" name="${key}" value="${paramList[key]}" />`;
-                }).join('')}
-                <input type="hidden" name="CHECKSUMHASH" value="${checksum}">
-              </tbody>
-            </table>
+          <form method="post" action="https://securegw-stage.paytm.in/order/process" name="paytmForm">
+            ${Object.keys(paytmParams)
+              .map(
+                (key) =>
+                  `<input type="hidden" name="${key}" value="${paytmParams[key]}" />`
+              )
+              .join("")}
             <script type="text/javascript">
               document.paytmForm.submit();
             </script>
@@ -179,7 +132,7 @@ app.post('/initiatePayment', async (req, res) => {
         </body>
       </html>
     `;
-    
+
     res.send(formHtml);
   } catch (error) {
     console.error("Payment Initiation Error:", error);
@@ -187,66 +140,55 @@ app.post('/initiatePayment', async (req, res) => {
   }
 });
 
-// Paytm payment callback endpoint
-app.post('/payment-callback', async (req, res) => {
+
+app.post("/payment-callback", async (req, res) => {
   try {
+    console.log("Raw Paytm Callback Response:", req.body);
+
+    if (!req.body.CHECKSUMHASH) {
+      console.error("Error: Missing CHECKSUMHASH in Paytm response.");
+      return res.status(400).json({ success: false, message: "Missing CHECKSUMHASH", rawData: req.body });
+    }
+
     const paytmResponse = req.body;
     const receivedChecksum = paytmResponse.CHECKSUMHASH;
-
-    // Remove checksum from the response body before verification
     delete paytmResponse.CHECKSUMHASH;
 
-    // Verify the checksum
-    const isValidChecksum = await PaytmChecksum.verifySignature(paytmResponse, "Wi%SmC%mkRR%jP8M", receivedChecksum);
+    const isValidChecksum = await PaytmChecksum.verifySignature(
+      paytmResponse,
+      PAYTM_MERCHANT_KEY,
+      receivedChecksum
+    );
+
+    console.log("Checksum Verification:", isValidChecksum);
 
     if (!isValidChecksum) {
       console.error("Invalid Checksum - Possible Tampering Detected!");
       return res.status(400).json({ success: false, message: "Invalid checksum" });
     }
 
-    // Process the payment based on the valid checksum
-    const { ORDERID, TXNID, TXNAMOUNT, STATUS, RESPMSG, PAYMENTMODE, TXNDATE } = paytmResponse;
+    console.log(`Payment Status: ${paytmResponse.STATUS}, Order ID: ${paytmResponse.ORDERID}`);
 
-    if (!ORDERID || !STATUS) {
-      return res.status(400).json({ success: false, message: "Invalid payment response." });
+    if (paytmResponse.STATUS === "TXN_SUCCESS") {
+      return res.redirect(`http://localhost:3000/payment-success?orderId=${paytmResponse.ORDERID}`);
+    } else {
+      return res.redirect(`http://localhost:3000/payment-failed?orderId=${paytmResponse.ORDERID}`);
     }
-
-    // Update payment status in the database
-    const updatedPayment = await Payment.findOneAndUpdate(
-      { orderId: ORDERID },
-      { transactionId: TXNID, amount: TXNAMOUNT, paymentStatus: STATUS, paymentMode: PAYMENTMODE, transactionDate: TXNDATE },
-      { new: true }
-    );
-
-    if (!updatedPayment) {
-      return res.status(404).json({ success: false, message: "Payment not found." });
-    }
-
-    // Optionally update other records like 'Lead' status if needed
-    console.log(`Payment status updated: ${ORDERID} is ${STATUS}`);
-
-    return res.status(200).json({
-      success: true,
-      message: `Payment status updated successfully. orderId: ${ORDERID}, Status: ${STATUS}`,
-    });
   } catch (error) {
     console.error("Payment Callback Error:", error);
-    return res.status(500).json({ success: false, message: "Payment callback processing failed.", error: error.message });
+    return res.status(500).json({
+      success: false,
+      message: "Payment callback processing failed.",
+      error: error.message,
+    });
   }
 });
 
-// Function to verify checksum
-const verifyChecksum = (params, checksum) => {
-  const paramsStr = Object.keys(params)
-    .sort()
-    .map(key => `${key}=${params[key]}`)
-    .join("&");
+console.log("PAYTM_MERCHANT_KEY:", PAYTM_MERCHANT_KEY);
 
-  const hash = crypto.createHmac('sha256', PAYTM_MERCHANT_KEY).update(paramsStr).digest('hex');
-  return hash === checksum;
-};
 
-// Start the server
+
+
 
 app.listen(PORT, () => {
   console.log("The server is running");
