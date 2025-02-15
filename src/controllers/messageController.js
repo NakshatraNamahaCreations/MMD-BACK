@@ -26,7 +26,7 @@ export const sendMessage = async (req, res) => {
     const headers = {
       authkey: process.env.MSG91_AUTH_KEY,
       "Content-Type": "application/json",
-    };
+    };  
 
     const response = await axios.post(url, payload, { headers });
     return res.json({ status: response.status, response: response.data });

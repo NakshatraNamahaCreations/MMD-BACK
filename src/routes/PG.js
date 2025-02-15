@@ -1,11 +1,15 @@
-import PaytmChecksum  from "paytmchecksum";
+import PaytmChecksum from "paytmchecksum";
 import PaymentModel from "../models/PG.js"; // Ensure your model is correctly imported
 import express from "express";
+import dotenv from 'dotenv';
 
 
 const router = express.Router();
 import Lead from "../models/Lead.js";
+import axios from "axios";
+import User from "../models/User.js";
 
+dotenv.config({ path: "../../.env" });
 
 // Paytm Config
 const paytmConfig = {
@@ -14,7 +18,7 @@ const paytmConfig = {
     WEBSITE: "DEFAULT",
     INDUSTRY_TYPE_ID: "Retail",
     CHANNEL_ID: "WEB",
-    CALLBACK_URL: "http://localhost:9000/api/PG/paytm/callback",
+    CALLBACK_URL: "https://api.makemydocuments.in/api/PG/paytm/callback",
 };
 
 router.post("/paytm/initiate", async (req, res) => {
@@ -61,7 +65,7 @@ router.post("/paytm/callback", async (req, res) => {
         }
 
         const { CHECKSUMHASH, ...paramList } = req.body; // Extract checksum and parameters
-        const {  orderid } = req.query; // Extract service & orderId from URL
+        const { service, orderid } = req.query; // Extract service & orderId from URL
 
         if (!CHECKSUMHASH) {
             console.error("Missing CHECKSUMHASH in response.");
@@ -100,13 +104,58 @@ router.post("/paytm/callback", async (req, res) => {
             console.error(`Transaction not found for Order ID: ${orderid}`);
             return res.status(404).json({ success: false, message: "Transaction not found." });
         }
+        // if (paymentStatus === "PAID") {
+            console.log("📲 Preparing SMS Payload...");
 
-        console.log(`Payment status updated to ${paymentStatus} for Order ID: ${orderid}`);
+            try {
+                const smsPayload = {
+                    mobile: `917605968434`,
+                    name: "Customer",
+                    var1: orderid,
+                    var2: service,
+                };
 
-        // Redirect user to success or failure page
-        const successRedirectURL = `https://makemydocuments.in/paymentsuccess?service=${service}`;
-        const failureRedirectURL = `https://makemydocuments.in/paymentfailure?service=${service}`;
+                console.log("📩 Sending SMS with payload:", smsPayload);
+
+                const smsResponse = await axios.post(
+                    "http://localhost:9000/api/send-sms",
+                    smsPayload,
+                    {
+                        headers: {
+                            "authkey": process.env.MSG91_AUTH_KEY,
+                            "Content-Type": "application/json",
+                        },
+                    }
+                );
+
+                console.log("✅ SMS Sent Successfully:", smsResponse.data);
+            } catch (smsError) {
+                console.error("❌ SMS Sending Failed:", smsError.response?.data || smsError.message);
+            }
         
+        // if (paymentStatus === "PAID") {
+        //     try {
+
+        //         const smsPayload = {
+        //             mobile: "7605968434", 
+        //             name: user.name || "Customer",
+        //             service: service,
+        //             orderid: orderid,
+        //         };
+        //         const response = await axios.post(`http://localhost:9000/api/send-sms?service=${service}`,smsPayload);
+
+        //         console.log("✅ SMS Sent Successfully:", response.data);
+
+        //     } catch (smsError) {
+        //         console.error("❌ SMS Sending Failed:", smsError.response?.data || smsError.message);
+        //     }
+        // }
+        console.log(`Payment status updated to ${paymentStatus} for Order ID: ${orderid}`);
+        //   await axios.post("http://localhost:9000/api/send-sms", payload)
+        // Redirect user to success or failure page
+        const successRedirectURL = `https://makemydocuments.in/request_success?service=${service}`;
+        const failureRedirectURL = `https://makemydocuments.in/failure?service=${service}`;
+
         return res.redirect(paymentStatus === "PAID" ? successRedirectURL : failureRedirectURL);
     } catch (error) {
         console.error("Error processing Paytm callback:", error);
