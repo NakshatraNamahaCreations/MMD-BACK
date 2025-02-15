@@ -1,8 +1,13 @@
 export const formatDate = (date) => {
-  if (!date) return null;
-  return new Date(date).toISOString().split("T")[0];
-};
+  if (!date) return "";
 
+  const formattedDate = new Date(date);
+  const day = String(formattedDate.getDate()).padStart(2, "0");
+  const month = String(formattedDate.getMonth() + 1).padStart(2, "0"); // Months are 0-based
+  const year = formattedDate.getFullYear();
+
+  return `${day}.${month}.${year}`; // Format as DD.MM.YYYY
+};
 export const formatTime = (time) => {
   if (!time || typeof time !== "string") return null;
 

@@ -14,54 +14,22 @@ const paytmConfig = {
     WEBSITE: "DEFAULT",
     INDUSTRY_TYPE_ID: "Retail",
     CHANNEL_ID: "WEB",
-    CALLBACK_URL: "https://api.makemydocuments.in/api/PG/paytm/callback",
+    CALLBACK_URL: "http://localhost:9000/api/PG/paytm/callback",
 };
 
 router.post("/paytm/initiate", async (req, res) => {
     try {
-        if (!req.body || Object.keys(req.body).length === 0) {
-            return res.status(400).json({ status: "error", message: "Invalid request payload" });
-        }
+        const { CUST_ID, TXN_AMOUNT, SERVICE, ORDER_ID } = req.body;
 
-        const leadData = req.body;
-        
-     
-            Object.keys(leadData).forEach((key) => {
-                if (leadData[key] === "" || leadData[key] === null || leadData[key] === undefined) {
-                    delete leadData[key]; 
-                }
-            });
+        console.log("Received ORDER_ID:", ORDER_ID, typeof ORDER_ID);  // Debugging
 
-        let ORDER_ID;
-
-     
-        //     // ✅ Generate new ORDER_ID
-            const lastLead = await Lead.findOne({}, { orderId: 1 })
-                .sort({ orderId: -1 })
-                .collation({ locale: "en", numericOrdering: true });
-
-            const lastId = lastLead?.orderId
-                ? parseInt(lastLead.orderId.replace("MMD2025", ""), 10) + 1
-                : 1;
-                
-            ORDER_ID = `MMD2025${String(lastId).padStart(4, "0")}`;
-            
-            const newLead = new Lead({ ...leadData, orderId: ORDER_ID });
-            await newLead.save();
-        
-
-        // const ORDER_ID="mmmas233"
-        // ✅ Extracting Parameters
-        const { CUST_ID, TXN_AMOUNT, SERVICE } = req.body;
-
-        if (!CUST_ID || !TXN_AMOUNT || !SERVICE) {
+        if (!CUST_ID || !TXN_AMOUNT || !SERVICE || !ORDER_ID) {
             return res.status(400).json({ status: "error", message: "Missing required parameters" });
         }
 
-        // ✅ Prepare Paytm Parameters
         let paramList = {
             MID: paytmConfig.MID,
-            ORDER_ID: ORDER_ID,
+            ORDER_ID: ORDER_ID, // Make sure this is dynamically assigned
             CUST_ID: CUST_ID,
             INDUSTRY_TYPE_ID: paytmConfig.INDUSTRY_TYPE_ID,
             CHANNEL_ID: paytmConfig.CHANNEL_ID,
@@ -70,17 +38,18 @@ router.post("/paytm/initiate", async (req, res) => {
             CALLBACK_URL: `${paytmConfig.CALLBACK_URL}?orderid=${ORDER_ID}&service=${SERVICE}`,
         };
 
-        // ✅ Generate Checksum using Paytm Utility
+        console.log("Param List Before Checksum:", paramList); // Debugging
+
         const checksum = await PaytmChecksum.generateSignature(paramList, paytmConfig.MERCHANT_KEY);
         paramList.CHECKSUMHASH = checksum;
 
-        
         res.json({ status: "success", ORDER_ID, CHECKSUMHASH: checksum, paramList });
     } catch (error) {
         console.error("Error initiating Paytm payment:", error);
         res.status(500).json({ status: "error", message: "Internal Server Error" });
     }
 });
+
 
 
 router.post("/paytm/callback", async (req, res) => {
@@ -92,7 +61,7 @@ router.post("/paytm/callback", async (req, res) => {
         }
 
         const { CHECKSUMHASH, ...paramList } = req.body; // Extract checksum and parameters
-        const {  service,orderid } = req.query; // Extract service & orderId from URL
+        const {  orderid } = req.query; // Extract service & orderId from URL
 
         if (!CHECKSUMHASH) {
             console.error("Missing CHECKSUMHASH in response.");
@@ -122,7 +91,7 @@ router.post("/paytm/callback", async (req, res) => {
 
         // Update transaction status in MongoDB
         const transaction = await Lead.findOneAndUpdate(
-            { orderId: orderid },
+            { PGID: orderid },
             { paymentStatus },
             { new: true }
         );

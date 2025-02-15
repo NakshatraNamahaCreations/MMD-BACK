@@ -6,7 +6,7 @@ import mongoose from "mongoose";
 
 export const  createLead = async (req, res) => {
   try {
-   
+   console.log(req.body.PGID,"pgid")
     if (!req.body || Object.keys(req.body).length === 0) {
       return res
         .status(400)
@@ -104,15 +104,24 @@ export const getAllLeads = async (req, res) => {
 
     let leads;
     let permission = "view-only";
-
     if (user.role === "admin") {
-      leads = await Lead.find().sort({ updated_by: -1 });
+      leads = await Lead.find({
+        $or: [
+          { status: { $nin: ["followup", "overdue", "dead", "In Progress", "converted"] } },
+          { status: { $exists: false } },
+          { status: "" } 
+        ],
+      }).sort({ createdAt: -1 });
 
       permission = "full-access";
     } else {
       leads = await Lead.find({
-        assign: assign,
-      }).sort({ updated_by: -1 });
+        $or: [
+          { status: { $nin: ["followup", "overdue", "dead", "In Progress", "converted"] } },
+          { status: { $exists: false } }, 
+          { status: "" }
+        ],
+      }).sort({ createdAt: -1 });
     }
 
     if (!leads || leads.length === 0) {
@@ -305,36 +314,64 @@ export const createOrUpdateFollowUp = async (req, res) => {
 
 export const getCounts = async (req, res) => {
   try {
-    const totalLeads = await Lead.countDocuments();
+    const { user } = req; // Assuming user information is in req.user
 
-    const totalUsers = await User.countDocuments();
+    if (!user) {
+      return res.status(401).json({
+        status: "error",
+        message: "Unauthorized access",
+      });
+    }
 
-    const statusCounts = await Lead.aggregate([
-      { $group: { _id: "$status", count: { $sum: 1 } } },
-    ]);
+    let totalLeads = 0;
+    let totalUsers = 0;
+    let statusCounts = {};
+    let assignedCounts = {};
 
-    const formattedStatusCounts = statusCounts.reduce((acc, status) => {
-      acc[status._id] = status.count;
-      return acc;
-    }, {});
+    if (user.role === "admin") {
+      // Admin: Fetch all counts
+      totalLeads = await Lead.countDocuments();
+      totalUsers = await User.countDocuments();
 
-    const assignedCounts = await Lead.aggregate([
-      { $group: { _id: "$assign", count: { $sum: 1 } } },
-    ]);
+      const statusCountsData = await Lead.aggregate([
+        { $group: { _id: "$status", count: { $sum: 1 } } },
+      ]);
 
-    const formattedAssignedCounts = assignedCounts.reduce((acc, assign) => {
-      acc[assign._id] = assign.count;
-      return acc;
-    }, {});
+      statusCounts = statusCountsData.reduce((acc, status) => {
+        acc[status._id] = status.count;
+        return acc;
+      }, {});
+
+      const assignedCountsData = await Lead.aggregate([
+        { $group: { _id: "$assign", count: { $sum: 1 } } },
+      ]);
+
+      assignedCounts = assignedCountsData.reduce((acc, assign) => {
+        acc[assign._id] = assign.count;
+        return acc;
+      }, {});
+    } else {
+      // User: Fetch only assigned leads count
+      totalLeads = await Lead.countDocuments({ assign: user._id });
+
+      const statusCountsData = await Lead.aggregate([
+        { $match: { assign: user._id } },
+        { $group: { _id: "$status", count: { $sum: 1 } } },
+      ]);
+
+      statusCounts = statusCountsData.reduce((acc, status) => {
+        acc[status._id] = status.count;
+        return acc;
+      }, {});
+    }
 
     res.status(200).json({
       status: "success",
       message: "Counts retrieved successfully",
       data: {
         totalLeads,
-        totalUsers,
-        leadsByStatus: formattedStatusCounts,
-        leadsByAssign: formattedAssignedCounts,
+        ...(user.role === "admin" && { totalUsers, leadsByAssign: assignedCounts }),
+        leadsByStatus: statusCounts,
       },
     });
   } catch (error) {

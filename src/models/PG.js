@@ -8,6 +8,7 @@ const PGchema = new mongoose.Schema({
   txnAmount: { type: String, required: true },
   service: { type: String, required: true },
   checksumHash: { type: String, required: true },
+  ORDER_ID:{type:String},
   paymentStatus: { type: String, default: "Pending" },
   createdAt: { type: Date, default: Date.now }
 });

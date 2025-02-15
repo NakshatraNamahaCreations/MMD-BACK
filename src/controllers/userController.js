@@ -68,7 +68,7 @@ export const editUser = async (req, res) => {
 
       // Handle Profile Picture Upload
       if (req.file) {
-        const baseUrl = "http://localhost:9000/uploads/profile_pictures/";
+        const baseUrl = "https://api.makemydocuments.in/uploads/profile_pictures/";
         user.profile_picture = baseUrl + req.file.filename;
       }
 

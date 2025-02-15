@@ -145,11 +145,12 @@ export const getOverdueLead = async (req, res) => {
 
     let leads;
     let permission = "view-only";
-
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0); 
     if (user.role === "admin") {
       leads = await Lead.find({
         status: "followup",
-        followupDate: { $exists: true, $ne: null, $lt: new Date() },
+        followupDate: { $exists: true, $ne: null, $lt: todayStart },
       });
       permission = "full-access";
     } else {

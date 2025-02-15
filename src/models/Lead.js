@@ -50,6 +50,7 @@ const leadSchema = new mongoose.Schema(
     tenantage: { type: String, default: "" },
     tenantsfathername: { type: String, default: "" },
     tenantspermanent_previousaddress: { type: String, default: "" },
+    tenantDistrict:{type:String, default:""},
     tenantaddress: { type: String, default: "" },
     shiftingdate: { type: Date, default: null },
     shiftingaddress: { type: String, default: "" },
@@ -83,6 +84,8 @@ const leadSchema = new mongoose.Schema(
     tenantPincode: { type: String, default: "" },
     state: { type: String, default: "" },
     age: { type: String, default: "" },
+    PGID: { type: String, default: "" },
+
     updated_by: { type: String, default: "" },
     paymentStatus: {
       type: String,
