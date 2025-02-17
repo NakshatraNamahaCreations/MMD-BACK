@@ -208,8 +208,7 @@ router.post("/paytm/callback", async (req, res) => {
     console.log(
       `Payment status updated to ${paymentStatus} for Order ID: ${orderid}`
     );
-    //   await axios.post("http://localhost:9000/api/send-sms", payload)
-    // Redirect user to success or failure page
+
     const successRedirectURL = `https://makemydocuments.in/request_success?service=${service}`;
     const failureRedirectURL = `https://makemydocuments.in/failure?service=${service}`;
 
