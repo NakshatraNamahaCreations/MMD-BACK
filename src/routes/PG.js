@@ -17,7 +17,7 @@ const paytmConfig = {
   WEBSITE: "DEFAULT",
   INDUSTRY_TYPE_ID: "Retail",
   CHANNEL_ID: "WEB",
-  CALLBACK_URL: "http://localhost:9000/api/PG/paytm/callback",
+  CALLBACK_URL: "https://api.makemydocuments.in/api/PG/paytm/callback",
 };
 
 router.post("/paytm/initiate", async (req, res) => {
@@ -41,7 +41,7 @@ router.post("/paytm/initiate", async (req, res) => {
       CALLBACK_URL: `${paytmConfig.CALLBACK_URL}?orderid=${ORDER_ID}&service=${SERVICE}`,
     };
 
-    console.log("Param List Before Checksum:", paramList); // Debugging
+    console.log("Param List Before Checksum:", paramList);
 
     const checksum = await PaytmChecksum.generateSignature(
       paramList,
@@ -171,7 +171,7 @@ router.post("/paytm/callback", async (req, res) => {
           var1: orderid,
         };
         const smsResponse = await axios.post(
-          "http://localhost:9000/api/send-sms",
+          "https://api.makemydocuments.in/api/send-sms",
           smsPayload,
           {
             headers: {
